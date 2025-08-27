@@ -85,7 +85,7 @@ async def create_issue(ctx: discord.ApplicationContext, title: str, body: str = 
         title, body
     )
     issue_url = created_issue.html_url
-    await ctx.respond(f"Issue created! {issue_url}")
+    await ctx.respond(f"Issue created! {issue_url}", ephemeral=True)
 
 
 if __name__ == "__main__":
