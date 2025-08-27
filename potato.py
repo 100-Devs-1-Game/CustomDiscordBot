@@ -16,5 +16,6 @@ class Potato(commands.Cog):
                 message.content.startswith(word + " ")
                 or message.content.endswith(" " + word)
                 or f" {word} " in message.content
+                or message.content == word
             ):
                 await message.add_reaction("🥔")
