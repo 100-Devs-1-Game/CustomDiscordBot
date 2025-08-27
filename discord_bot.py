@@ -5,6 +5,7 @@ import discord
 from dotenv import load_dotenv
 from github import Auth, Github
 
+from potato import Potato
 
 # load all the variables from the env file
 load_dotenv()
@@ -30,7 +31,7 @@ installauth = appauth.get_installation_auth(int(GITHUB_INSTALLATION_ID))
 
 GITHUB = Github(auth=installauth)
 
-bot = discord.Bot()
+bot = discord.Bot(intents=discord.Intents.all())
 
 
 # A decorator to create guild-specific slash commands
@@ -88,4 +89,5 @@ async def create_issue(ctx: discord.ApplicationContext, title: str, body: str = 
 
 
 if __name__ == "__main__":
+    bot.add_cog(Potato(bot))
     bot.run(os.getenv("TOKEN"))  # run the bot with the token
