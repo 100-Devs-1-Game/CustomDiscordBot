@@ -1,17 +1,19 @@
 import os
+from pathlib import Path
 
 import discord
 from dotenv import load_dotenv
 from github import Auth, Github
 
-GUILD_IDS = [1393033395298373643]  # your server IDs
 
 # load all the variables from the env file
 load_dotenv()
 
+GUILD_IDS = [int(os.getenv("GUILD_ID"))]  # your server IDs
+
 # GitHub App credentials
 GITHUB_APP_ID = os.getenv("GITHUB_APP_ID")  # GitHub App ID
-PRIVATE_KEY_PATH = (
+PRIVATE_KEY_PATH = Path(
     "100devs-discord-bot.2025-08-26.private-key.pem"  # downloaded private key
 )
 GITHUB_INSTALLATION_ID = os.getenv(
@@ -23,12 +25,8 @@ REPO_NAME = "ProjectTemplate"
 assert GITHUB_APP_ID
 assert GITHUB_INSTALLATION_ID
 
-with open("100devs-discord-bot.2025-08-26.private-key.pem", "r") as f:
-    private_key = f.read()
-    appauth = Auth.AppAuth(GITHUB_APP_ID, private_key)
-    private_key = ""
-
-    installauth = appauth.get_installation_auth(int(GITHUB_INSTALLATION_ID))
+appauth = Auth.AppAuth(GITHUB_APP_ID, PRIVATE_KEY_PATH.read_text())
+installauth = appauth.get_installation_auth(int(GITHUB_INSTALLATION_ID))
 
 GITHUB = Github(auth=installauth)
 
@@ -54,7 +52,7 @@ async def hello(ctx: discord.ApplicationContext):
 @guild_slash_command(
     name="lintorder", description="Display the order our gdlinter expects"
 )
-async def hello(ctx: discord.ApplicationContext):
+async def lintorder(ctx: discord.ApplicationContext):
     BASE_DIR = os.path.dirname(
         os.path.abspath(__file__)
     )  # folder where your bot script is
@@ -89,4 +87,5 @@ async def create_issue(ctx: discord.ApplicationContext, title: str, body: str = 
     await ctx.respond(f"Issue created! {issue_url}")
 
 
-bot.run(os.getenv("TOKEN"))  # run the bot with the token
+if __name__ == "__main__":
+    bot.run(os.getenv("TOKEN"))  # run the bot with the token
