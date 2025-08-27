@@ -1,0 +1,6 @@
+py-cord
+pyjwt[crypto]
+dotenv
+requests
+aiohttp==3.12.15
+pygithub
