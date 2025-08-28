@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from github import Auth, Github
 
 from potato import Potato
+from fun import Fun
 
 # load all the variables from the env file
 load_dotenv()
@@ -90,4 +91,5 @@ async def create_issue(ctx: discord.ApplicationContext, title: str, body: str = 
 
 if __name__ == "__main__":
     bot.add_cog(Potato(bot))
+    bot.add_cog(Fun(bot))
     bot.run(os.getenv("TOKEN"))  # run the bot with the token
