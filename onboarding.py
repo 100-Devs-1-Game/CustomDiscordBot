@@ -48,7 +48,12 @@ class Onboarding(commands.Cog):
 				inline=False,
 			)
 
-		embed.set_footer(text=FOOTER_TEXT.strip())
+		#embed.set_footer(text=FOOTER_TEXT.strip())
+		embed.add_field(
+			name="Need help?",
+			value=FOOTER_TEXT.strip(),
+			inline=False,
+		)
 		return embed
 
 
