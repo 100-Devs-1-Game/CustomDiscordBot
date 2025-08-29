@@ -4,7 +4,7 @@ from discord.ext import commands
 # === Configurable ===
 GREETING_MESSAGE = "Welcome to our Community!"
 COMMUNITY_DESCRIPTION = (
-	"We are trying to make video games with as many contributors as possible. Will you help us?"
+	"We are trying to make video games with as many contributors as possible."
 )
 FOOTER_TEXT = (
 """
