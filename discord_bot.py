@@ -8,6 +8,7 @@ from github import Auth, Github
 from potato import Potato
 from fun import Fun
 from help import Help
+from onboarding import Onboarding
 
 # load all the variables from the env file
 load_dotenv()
@@ -94,4 +95,5 @@ if __name__ == "__main__":
     bot.add_cog(Potato(bot))
     bot.add_cog(Fun(bot))
     bot.add_cog(Help(bot))
+    bot.add_cog(Onboarding(bot))
     bot.run(os.getenv("TOKEN"))  # run the bot with the token
