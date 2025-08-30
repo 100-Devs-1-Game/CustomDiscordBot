@@ -20,6 +20,7 @@ Either way, you’re always welcome to suggest improvements to our projects, gam
 HIGHLIGHT_CHANNEL_IDS = [
 	1393312261770051674,
 	1394481813052850299,
+	1403380646105321502,
 	1393033401128194061
 ]
 
