@@ -5,25 +5,29 @@ TASKS_DB = "dbs/tasks.db"
 EVENTS_DB = "dbs/events.db"
 
 
-def add_game(name, repo_name, channel_id, owner):
-	insert_into_db(GAMES_DB, "games", name=name, repo_name=repo_name, channel_id=channel_id, owner=owner)	
+class Database:
+	@staticmethod
+	def add_game(name, repo_name, channel_id, owner):
+		Database.insert_into_db(GAMES_DB, "games", name=name, repo_name=repo_name, channel_id=channel_id, owner=owner)	
 
 
-def add_task(user_id, description, deadline=None, event_id=None):
-	insert_into_db(TASKS_DB, "tasks", user_id=user_id, description=description, deadline=deadline, event_id=event_id)
+	@staticmethod
+	def add_task(user_id, description, deadline=None, event_id=None):
+		Database.insert_into_db(TASKS_DB, "tasks", user_id=user_id, description=description, deadline=deadline, event_id=event_id)
 
 
-def insert_into_db(db_path, table, **columns):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    
-    keys = ', '.join(columns.keys())
-    placeholders = ', '.join(['?'] * len(columns))
-    values = tuple(columns.values())
-    
-    cursor.execute(f"INSERT INTO {table} ({keys}) VALUES ({placeholders})", values)
-    conn.commit()
-    conn.close()
+	@staticmethod
+	def insert_into_db(db_path, table, **columns):
+		conn = sqlite3.connect(db_path)
+		cursor = conn.cursor()
+		
+		keys = ', '.join(columns.keys())
+		placeholders = ', '.join(['?'] * len(columns))
+		values = tuple(columns.values())
+		
+		cursor.execute(f"INSERT INTO {table} ({keys}) VALUES ({placeholders})", values)
+		conn.commit()
+		conn.close()
 
 
 def setup_db(db_name, table_schemas):
