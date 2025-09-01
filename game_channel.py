@@ -92,16 +92,7 @@ class GameChannel(commands.Cog):
 			category=category
 		)
 
-		await ctx.respond(f"Creating <#{new_channel.id}>…", ephemeral=True)
-
-		#copy messages
-		async for msg in thread.history(oldest_first=True):
-			content = f"**{msg.author.display_name}:** {msg.content}"
-			if msg.attachments:
-				for att in msg.attachments:
-					content += f"\n{att.url}"
-			if content.strip():
-				await new_channel.send(content)
+		#await ctx.respond(f"Creating <#{new_channel.id}>…", ephemeral=True)
 
 		# lock thread
 		await thread.edit(
@@ -110,13 +101,48 @@ class GameChannel(commands.Cog):
 			name=f"[LOCKED] {thread.name}"
 		)
 
+		Database.add_game(game_name, repo.name, new_channel.id, str(ctx.author))
+
 		# add link to new channel in old thread
 		await thread.send(f"Thread closed. Continued in {new_channel.mention}")
 
-		Database.add_game(game_name, repo.name, new_channel.id, str(ctx.author))
+
+		await self.copy_messages(thread, new_channel)
+
+
+	async def copy_messages(thread, new_channel):
+		async for msg in thread.history(oldest_first=True):
+			content = f"**{msg.author.display_name}:** {msg.content}"
+			if msg.attachments:
+				for att in msg.attachments:
+					content += f"\n{att.url}"
+			if content.strip():
+				await new_channel.send(content)
+
+
+	@discord.slash_command(description="Copy messages from thread after duplication failed")
+	async def debug_copy_messages(self, ctx: discord.ApplicationContext, game_name: str):
+		await ctx.respond("Not implemented yet.", ephemeral=True)
+		return
+
+		if not isinstance(ctx.channel, discord.TextChannel):
+			await ctx.respond("You need to run this inside a text channel.", ephemeral=True)
+			return
+		new_channel = ctx.channel
+
+		if new_channel.topic.is_empty():
+			await ctx.respond("This channel has no topic.", ephemeral=True)
+			return
+
+		#thread_name = parse from topic
 
 
 def sanitize_repo_name(name: str) -> str:
+	# early return if name is already in PascalCase
+	if re.fullmatch(r"[A-Z][a-z0-9]+(?:[A-Z][a-z0-9]+)*", name):
+		return name
+	
+	name = name.replace("_", " ")
 	name = re.sub(r"[^a-zA-Z0-9 ]", "", name)
 	# split words by spaces, capitalize first letter of each
 	words = name.split()
