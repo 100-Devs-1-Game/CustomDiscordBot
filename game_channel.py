@@ -6,7 +6,7 @@ from discord.ext import commands
 from discord import option
 from dotenv import load_dotenv
 from github import Auth, Github
-import databases
+from databases import Database
 
 
 FORUM_ID = 1411735698951639193 
@@ -71,14 +71,6 @@ class GameChannel(commands.Cog):
 			await ctx.respond(f"Repo {repo_name_sanitized} already exists: {existing.html_url}", ephemeral=True)
 			return
 		else:
-			# create GitHub repo
-			# repo = GITHUB_ORG.create_repo(
-			# 	name=repo_name_sanitized,
-			# 	description=f"Repository for the game {game_name} - for 100 Games in 100 Days",
-			# 	private=False,
-			# 	auto_init=True,
-			# 	gitignore_template="Godot"
-			# )
 			repo= GITHUB_ORG.create_repo_from_template(
 				repo=GITHUB.get_repo("100-Devs-1-Game/MinimalProjectTemplate"),
 				name=repo_name_sanitized,
@@ -122,6 +114,12 @@ class GameChannel(commands.Cog):
 		await thread.send(f"Thread closed. Continued in {new_channel.mention}")
 
 		Database.add_game(game_name, repo.name, new_channel.id, str(ctx.author))
+
+
+		@discord.slash_command(description="Create game entry in DB")
+		@option("game_name", description="Name of game")
+		async def debug_create_game(self, ctx: discord.ApplicationContext, game_name: str):
+			Database.add_game(game_name, sanitize_repo_name(game_name), ctx.channel_id, str(ctx.author))
 
 
 
