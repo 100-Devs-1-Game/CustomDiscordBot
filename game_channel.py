@@ -6,6 +6,7 @@ from discord.ext import commands
 from discord import option
 from dotenv import load_dotenv
 from github import Auth, Github
+from databases import Database
 
 FORUM_ID = 1411735698951639193 
 CHANNEL_CATEGORY = 1411870610279366686
@@ -109,6 +110,8 @@ class GameChannel(commands.Cog):
 
 		# add link to new channel in old thread
 		await thread.send(f"Thread closed. Continued in {new_channel.mention}")
+
+		Database.add_game(game_name, repo.name, new_channel.id, str(ctx.author))
 
 
 
