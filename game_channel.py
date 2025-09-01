@@ -107,7 +107,7 @@ class GameChannel(commands.Cog):
 		await thread.send(f"Thread closed. Continued in {new_channel.mention}")
 
 
-		await self.copy_messages(thread, new_channel)
+		await self.copy_messages(self, thread, new_channel)
 
 
 	async def copy_messages(thread, new_channel):
@@ -139,7 +139,7 @@ class GameChannel(commands.Cog):
 
 def sanitize_repo_name(name: str) -> str:
 	# early return if name is already in PascalCase
-	if re.fullmatch(r"[A-Z][a-z0-9]+(?:[A-Z][a-z0-9]+)*", name):
+	if re.fullmatch(r"(?:[A-Z][a-z0-9]*)+", name):
 		return name
 	
 	name = name.replace("_", " ")
