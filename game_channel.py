@@ -80,7 +80,7 @@ class GameChannel(commands.Cog):
 			# 	gitignore_template="Godot"
 			# )
 			repo= GITHUB_ORG.create_repo_from_template(
-				template_repo=GITHUB.get_repo("100-Devs-1-Game/MinimalProjectTemplate"),
+				repo=GITHUB.get_repo("100-Devs-1-Game/MinimalProjectTemplate"),
 				name=repo_name_sanitized,
 				description=f"Repository for the game {game_name} - for 100 Games in 100 Days",
 				private=False,
