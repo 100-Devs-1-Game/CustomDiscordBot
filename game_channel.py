@@ -10,6 +10,8 @@ from databases import Database
 
 FORUM_ID = 1411735698951639193 
 CHANNEL_CATEGORY = 1411870610279366686
+#FORUM_ID = -1 
+#CHANNEL_CATEGORY = 
 
 
 # load all the variables from the env file
@@ -69,12 +71,19 @@ class GameChannel(commands.Cog):
 			return
 		else:
 			# create GitHub repo
-			repo = GITHUB_ORG.create_repo(
+			# repo = GITHUB_ORG.create_repo(
+			# 	name=repo_name_sanitized,
+			# 	description=f"Repository for the game {game_name} - for 100 Games in 100 Days",
+			# 	private=False,
+			# 	auto_init=True,
+			# 	gitignore_template="Godot"
+			# )
+			repo= GITHUB_ORG.create_repo_from_template(
+				template_repo=GITHUB.get_repo("https://github.com/100-Devs-1-Game/MinimalProjectTemplate"),
 				name=repo_name_sanitized,
 				description=f"Repository for the game {game_name} - for 100 Games in 100 Days",
 				private=False,
-				auto_init=True,
-				gitignore_template="Godot"
+				include_all_branches=False,
 			)
 
 
@@ -86,7 +95,7 @@ class GameChannel(commands.Cog):
 		# create new text channel
 		new_channel = await guild.create_text_channel(
 			name=game_name,
-			topic=f"Copy of {thread.jump_url}\nRepository: {repo.html_url}",
+			topic=f"Copy of {thread.jump_url}\nRepository: {repo.html_url}\nOwner: {ctx.author.mention}",
 			category=category
 		)
 
