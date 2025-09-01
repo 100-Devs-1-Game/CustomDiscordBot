@@ -117,7 +117,7 @@ class GameChannel(commands.Cog):
 				for att in msg.attachments:
 					content += f"\n{att.url}"
 			if content.strip():
-				await new_channel.send(content)
+				await new_channel.send(content, allowed_mentions=discord.AllowedMentions.none())
 
 
 	@discord.slash_command(description="Copy messages from thread after duplication failed")
