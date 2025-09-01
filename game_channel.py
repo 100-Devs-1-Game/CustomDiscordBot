@@ -1,0 +1,120 @@
+import re
+import os
+from pathlib import Path
+import discord
+from discord.ext import commands
+from discord import option
+from dotenv import load_dotenv
+from github import Auth, Github
+
+FORUM_ID = 1411735698951639193 
+CHANNEL_CATEGORY = 1411870610279366686
+
+
+# load all the variables from the env file
+load_dotenv()
+
+GUILD_IDS = [int(os.getenv("GUILD_ID"))]  # your server IDs
+
+# GitHub App credentials
+GITHUB_APP_ID = os.getenv("GITHUB_APP_ID")  # GitHub App ID
+PRIVATE_KEY_PATH = Path(
+	"100devs-discord-bot.2025-08-26.private-key.pem"  # downloaded private key
+)
+GITHUB_INSTALLATION_ID = os.getenv(
+	"GITHUB_INSTALLATION_ID"
+)  # App installation ID for the repo/org
+
+assert GITHUB_APP_ID
+assert GITHUB_INSTALLATION_ID
+
+appauth = Auth.AppAuth(GITHUB_APP_ID, PRIVATE_KEY_PATH.read_text())
+installauth = appauth.get_installation_auth(int(GITHUB_INSTALLATION_ID))
+
+GITHUB = Github(auth=installauth)
+GITHUB_ORG = GITHUB.get_organization("100-Devs-1-Game")
+
+
+
+class GameChannel(commands.Cog):
+	def __init__(self, bot: discord.Bot):
+		self.bot = bot
+
+	@discord.slash_command(description="Close Thread, Create new Channel for Game, Copy Content, Create Repository")
+	@option("game_name", description="Name of game")
+	async def create_game(self, ctx: discord.ApplicationContext, game_name: str):
+		if not isinstance(ctx.channel, discord.Thread):
+			await ctx.respond("You need to run this inside a forum thread.", ephemeral=True)
+			return
+		if FORUM_ID > -1 and ctx.channel.parent_id != FORUM_ID:
+			await ctx.respond("This thread is not part of the correct forum.", ephemeral=True)
+			return
+		if ctx.channel.locked:
+			await ctx.respond("This thread is already locked.", ephemeral=True)
+			return
+
+		repo_name_sanitized = sanitize_repo_name(game_name)
+
+		# check if it exists
+		existing = None
+		for repo in GITHUB_ORG.get_repos():
+			if repo.name.lower() == repo_name_sanitized.lower():
+				existing = repo
+				break
+
+		if existing:
+			print(f"Repo {repo_name_sanitized} already exists: {existing.html_url}")
+			await ctx.respond(f"Repo {repo_name_sanitized} already exists: {existing.html_url}", ephemeral=True)
+			return
+		else:
+			# create GitHub repo
+			repo = GITHUB_ORG.create_repo(
+				name=repo_name_sanitized,
+				description=f"Repository for the game {game_name} - for 100 Games in 100 Days",
+				private=False,
+				auto_init=True,
+				gitignore_template="Godot"
+			)
+
+
+		thread = ctx.channel
+		guild = ctx.guild
+
+		category = guild.get_channel(CHANNEL_CATEGORY)  # category ID
+		
+		# create new text channel
+		new_channel = await guild.create_text_channel(
+			name=game_name,
+			topic=f"Copy of {thread.jump_url}\nRepository: {repo.html_url}",
+			category=category
+		)
+
+		await ctx.respond(f"Creating <#{new_channel.id}>…", ephemeral=True)
+
+		#copy messages
+		async for msg in thread.history(oldest_first=True):
+			content = f"**{msg.author.display_name}:** {msg.content}"
+			if msg.attachments:
+				for att in msg.attachments:
+					content += f"\n{att.url}"
+			if content.strip():
+				await new_channel.send(content)
+
+		# lock thread
+		await thread.edit(
+			#archived=True,
+			locked=True,
+			name=f"[LOCKED] {thread.name}"
+		)
+
+		# add link to new channel in old thread
+		await thread.send(f"Thread closed. Continued in {new_channel.mention}")
+
+
+
+def sanitize_repo_name(name: str) -> str:
+	name = re.sub(r"[^a-zA-Z0-9 ]", "", name)
+	# split words by spaces, capitalize first letter of each
+	words = name.split()
+	pascal = "".join(word.capitalize() for word in words)
+	return pascal
