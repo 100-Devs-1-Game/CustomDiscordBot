@@ -6,7 +6,8 @@ from discord.ext import commands
 from discord import option
 from dotenv import load_dotenv
 from github import Auth, Github
-from databases import Database
+import databases
+
 
 FORUM_ID = 1411735698951639193 
 CHANNEL_CATEGORY = 1411870610279366686
