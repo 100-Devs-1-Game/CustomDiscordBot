@@ -116,13 +116,6 @@ class GameChannel(commands.Cog):
 		Database.add_game(game_name, repo.name, new_channel.id, str(ctx.author))
 
 
-	@discord.slash_command(description="Create game entry in DB")
-	@option("game_name", description="Name of game")
-	async def debug_create_game(self, ctx: discord.ApplicationContext, game_name: str):
-		Database.add_game(game_name, sanitize_repo_name(game_name), ctx.channel_id, str(ctx.author))
-
-
-
 def sanitize_repo_name(name: str) -> str:
 	name = re.sub(r"[^a-zA-Z0-9 ]", "", name)
 	# split words by spaces, capitalize first letter of each
