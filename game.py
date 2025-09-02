@@ -1,6 +1,8 @@
 import discord
 from discord.ext import commands
 from databases import Database
+from discord import Interaction
+from discord.ui import Modal, InputText
 
 GITHUB_URL_PREFIX= "https://github.com/100-Devs-1-Game/"
 
@@ -21,6 +23,22 @@ class Game(commands.Cog):
 		await Game.send_game_info(ctx, game_info)
 
 
+	@group.command()
+	async def description(self, ctx: discord.ApplicationContext):
+		game_info = Database.get_game_info(ctx.channel.id)
+		if not game_info:
+			await ctx.respond("No game associated with this channel.", ephemeral=True)
+			return
+
+		if ctx.author.name not in game_info["owner"]:
+			await ctx.respond("Only the game owner can update the description.", ephemeral=True)
+			return
+
+		current_desc = game_info.get("description", "")
+		modal = DescriptionModal(game_info["id"], current_desc)
+		await ctx.send_modal(modal)
+
+
 	@staticmethod
 	async def send_game_info(ctx, game_info):
 		embed = discord.Embed(
@@ -35,10 +53,46 @@ class Game(commands.Cog):
 		await ctx.respond(embed=embed, ephemeral=True)
 
 
-	# @group.command()
-	# async def test(self, ctx: discord.ApplicationContext):
-	# 	game_info = Database.fetch_one_as_dict("dbs/games.db", "games", "id = ?", (1, ) )
-	# 	if not game_info:
-	# 		await ctx.respond("No game info found", ephemeral=True)
-	# 		return
-	# 	await Game.send_game_info(ctx, game_info)
+	@group.command()
+	async def test(self, ctx: discord.ApplicationContext):
+		game_info = Database.fetch_one_as_dict(Database.GAMES_DB, "games", "id = ?", (1, ) )
+		if not game_info:
+			await ctx.respond("No game info found", ephemeral=True)
+			return
+
+		current_desc = game_info.get("description", "")
+		modal = DescriptionModal(game_info["id"], current_desc)
+		await ctx.send_modal(modal)
+
+
+
+
+
+class DescriptionModal(Modal):
+	def __init__(self, game_id: int, current_description: str = ""):
+		super().__init__(title="Update Game Description")
+		self.game_id = game_id
+
+		self.description_input = InputText(
+			label="Game Description",
+			style=discord.InputTextStyle.paragraph,
+			placeholder="Enter a description for your game...",
+			required=True,
+			max_length=2000,
+			value=current_description  # pre-fill with existing description
+		)
+
+		self.add_item(self.description_input)
+
+
+	async def callback(self, interaction: Interaction):
+		print("Description Modal submitted")
+		new_description = self.description_input.value
+
+		Database.update_field(Database.GAMES_DB, "games", self.game_id, "description", new_description)
+		
+		await interaction.response.send_message(
+			f"Description updated for game ID {self.game_id}.", ephemeral=True
+		)
+
+
