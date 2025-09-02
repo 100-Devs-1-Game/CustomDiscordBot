@@ -36,6 +36,19 @@ class Database:
 
 
 	@staticmethod
+	def update_field(db_path: str, table: str, row_id: int, field: str, value):
+		conn = sqlite3.connect(db_path)
+		cursor = conn.cursor()
+
+		# Use parameterized query to avoid SQL injection
+		query = f"UPDATE {table} SET {field} = ? WHERE id = ?"
+		cursor.execute(query, (value, row_id))
+
+		conn.commit()
+		conn.close()
+
+
+	@staticmethod
 	def fetch_one_as_dict(db_path: str, table: str, where: str, params: tuple = ()) -> dict | None:
 		conn = sqlite3.connect(db_path)
 		cursor = conn.cursor()
