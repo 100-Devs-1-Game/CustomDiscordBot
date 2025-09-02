@@ -5,8 +5,7 @@ class Database:
 	GAMES_DB = "dbs/games.db"
 	TASKS_DB = "dbs/tasks.db"
 	EVENTS_DB = "dbs/events.db"
-
-
+	
 
 	@staticmethod
 	def add_game(name, repo_name, channel_id, owner):
@@ -21,6 +20,10 @@ class Database:
 	@staticmethod
 	def add_task(user_id, description, deadline=None, event_id=None):
 		Database.insert_into_db(Database.TASKS_DB, "tasks", user_id=user_id, description=description, deadline=deadline, event_id=event_id)
+
+	@staticmethod
+	def register_contributor(discord_username, credit_name, discord_display_name=None, itch_io_link=None, alt_link=None):
+		Database.insert_into_db(Database.GAMES_DB, "contributors", discord_username=discord_username, credit_name=credit_name, discord_display_name=discord_display_name, itch_io_link=itch_io_link, alt_link=alt_link)
 
 
 	@staticmethod
@@ -44,7 +47,7 @@ class Database:
 
 		print("Updating field:", field, "to value:", value, "in table:", table, "for row ID:", row_id)
 
-		
+
 		# Use parameterized query to avoid SQL injection
 		query = f"UPDATE {table} SET {field} = ? WHERE id = ?"
 		cursor.execute(query, (value, row_id))
@@ -82,6 +85,11 @@ class Database:
 		return dict(zip(col_names, row))
 
 
+	@staticmethod
+	def entry_exists(db_path: str, table: str, field: str, value) -> bool:
+		return Database.fetch_one_as_dict(db_path, table, f"{field} = ?", (value,)) is not None
+
+
 
 def setup_db(db_name, table_schemas):
     conn = sqlite3.connect(db_name)
@@ -94,4 +102,6 @@ def setup_db(db_name, table_schemas):
 
 setup_db(Database.GAMES_DB, [{"name": "games", "columns": "id INTEGER PRIMARY KEY, name TEXT, repo_name TEXT, channel_id INTEGER, owner TEXT"}])
 setup_db(Database.TASKS_DB, [{"name": "tasks", "columns": "id INTEGER PRIMARY KEY AUTOINCREMENT, user_id TEXT NOT NULL, description TEXT NOT NULL, deadline TEXT, finished INTEGER DEFAULT 0, event_id INTEGER DEFAULT NULL"}])
-setup_db(Database.EVENTS_DB, [{"name": "events", "columns": "Id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, triggered INTEGER DEFAULT 0"}])
+setup_db(Database.EVENTS_DB, [{"name": "events", "columns": "id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, triggered INTEGER DEFAULT 0"}])
+setup_db(Database.GAMES_DB, [{"name": "contributors", "columns": "id INTEGER PRIMARY KEY AUTOINCREMENT, discord_username TEXT NOT NULL, discord_display_name TEXT, credit_name TEXT NOT NULL, itch_io_link TEXT, alt_link TEXT"}])
+setup_db(Database.GAMES_DB, [{"name": "game_contributors", "columns": "game_id INTEGER NOT NULL, contributor_id INTEGER NOT NULL, role TEXT NOT NULL, PRIMARY KEY (game_id, contributor_id, role), FOREIGN KEY (game_id) REFERENCES games(id), FOREIGN KEY (contributor_id) REFERENCES contributors(id)"}])
