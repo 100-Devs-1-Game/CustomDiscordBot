@@ -41,4 +41,4 @@ class Game(commands.Cog):
 		embed.add_field(name="Owner", value=game_info["owner"].split("(", 1)[1].rstrip(")").strip(), inline=True)
 		#embed.set_footer(text="Game Info Bot")
 
-		await ctx.send(embed=embed, Ephemeral=True)
+		await ctx.send(embed=embed, ephemeral=True)
