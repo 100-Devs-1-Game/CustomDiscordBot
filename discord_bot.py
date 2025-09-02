@@ -12,6 +12,7 @@ from onboarding import Onboarding
 from google_drive import GoogleDrive
 from game_channel import GameChannel
 from game import Game
+from contributors import Contributors
 
 
 # load all the variables from the env file
@@ -104,4 +105,5 @@ if __name__ == "__main__":
     #bot.add_cog(GoogleDrive(bot))
     bot.add_cog(GameChannel(bot))
     bot.add_cog(Game(bot))
+    bot.add_cog(Contributors(bot))
     bot.run(os.getenv("TOKEN"))  # run the bot with the token
