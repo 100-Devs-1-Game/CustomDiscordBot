@@ -99,6 +99,6 @@ if __name__ == "__main__":
     bot.add_cog(Fun(bot))
     bot.add_cog(Help(bot))
     bot.add_cog(Onboarding(bot))
-    bot.add_cog(GoogleDrive(bot))
+    #bot.add_cog(GoogleDrive(bot))
     bot.add_cog(GameChannel(bot))
     bot.run(os.getenv("TOKEN"))  # run the bot with the token
