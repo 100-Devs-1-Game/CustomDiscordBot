@@ -27,17 +27,24 @@ class Database:
 
 
 	@staticmethod
-	def insert_into_db(db_path, table, **columns):
+	def insert_into_db(db_path, table, **columns) -> bool:
 		conn = sqlite3.connect(db_path)
 		cursor = conn.cursor()
-		
+				
 		keys = ', '.join(columns.keys())
 		placeholders = ', '.join(['?'] * len(columns))
 		values = tuple(columns.values())
 		
-		cursor.execute(f"INSERT INTO {table} ({keys}) VALUES ({placeholders})", values)
-		conn.commit()
-		conn.close()
+		try:
+			cursor.execute(f"INSERT INTO {table} ({keys}) VALUES ({placeholders})", values)
+			conn.commit()
+			return True
+		except sqlite3.IntegrityError as e:
+			# unique constraint or other integrity failure
+			print(f"[DB] Insert failed: {e}")
+			return False
+		finally:
+			conn.close()
 
 
 	@staticmethod
@@ -92,12 +99,12 @@ class Database:
 
 
 def setup_db(db_name, table_schemas):
-    conn = sqlite3.connect(db_name)
-    cursor = conn.cursor()
-    for schema in table_schemas:
-        cursor.execute(f"CREATE TABLE IF NOT EXISTS {schema['name']} ({schema['columns']})")
-    conn.commit()
-    conn.close()
+	conn = sqlite3.connect(db_name)
+	cursor = conn.cursor()
+	for schema in table_schemas:
+		cursor.execute(f"CREATE TABLE IF NOT EXISTS {schema['name']} ({schema['columns']})")
+	conn.commit()
+	conn.close()
 
 
 setup_db(Database.GAMES_DB, [{"name": "games", "columns": "id INTEGER PRIMARY KEY, name TEXT, repo_name TEXT, channel_id INTEGER, owner TEXT"}])
