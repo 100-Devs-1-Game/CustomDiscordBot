@@ -53,16 +53,16 @@ class Game(commands.Cog):
 		await ctx.respond(embed=embed, ephemeral=True)
 
 
-	@group.command()
-	async def test(self, ctx: discord.ApplicationContext):
-		game_info = Database.fetch_one_as_dict(Database.GAMES_DB, "games", "id = ?", (1, ) )
-		if not game_info:
-			await ctx.respond("No game info found", ephemeral=True)
-			return
+	# @group.command()
+	# async def test(self, ctx: discord.ApplicationContext):
+	# 	game_info = Database.fetch_one_as_dict(Database.GAMES_DB, "games", "id = ?", (1, ) )
+	# 	if not game_info:
+	# 		await ctx.respond("No game info found", ephemeral=True)
+	# 		return
 
-		current_desc = game_info.get("description", "")
-		modal = DescriptionModal(game_info["id"], current_desc)
-		await ctx.send_modal(modal)
+	# 	current_desc = game_info.get("description", "")
+	# 	modal = DescriptionModal(game_info["id"], current_desc)
+	# 	await ctx.send_modal(modal)
 
 
 
