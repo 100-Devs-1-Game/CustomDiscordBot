@@ -1,24 +1,26 @@
 import sqlite3
 
-GAMES_DB = "dbs/games.db"
-TASKS_DB = "dbs/tasks.db"
-EVENTS_DB = "dbs/events.db"
-
 
 class Database:
+	GAMES_DB = "dbs/games.db"
+	TASKS_DB = "dbs/tasks.db"
+	EVENTS_DB = "dbs/events.db"
+
+
+
 	@staticmethod
 	def add_game(name, repo_name, channel_id, owner):
-		Database.insert_into_db(GAMES_DB, "games", name=name, repo_name=repo_name, channel_id=channel_id, owner=owner)	
+		Database.insert_into_db(Database.GAMES_DB, "games", name=name, repo_name=repo_name, channel_id=channel_id, owner=owner)	
 
 
 	@staticmethod
 	def get_game_info(channel_id):
-		return Database.fetch_one_as_dict(GAMES_DB, "games", "channel_id = ?", (channel_id,))	
+		return Database.fetch_one_as_dict(Database.GAMES_DB, "games", "channel_id = ?", (channel_id,))	
 
 
 	@staticmethod
 	def add_task(user_id, description, deadline=None, event_id=None):
-		Database.insert_into_db(TASKS_DB, "tasks", user_id=user_id, description=description, deadline=deadline, event_id=event_id)
+		Database.insert_into_db(Database.TASKS_DB, "tasks", user_id=user_id, description=description, deadline=deadline, event_id=event_id)
 
 
 	@staticmethod
@@ -40,6 +42,9 @@ class Database:
 		conn = sqlite3.connect(db_path)
 		cursor = conn.cursor()
 
+		print("Updating field:", field, "to value:", value, "in table:", table, "for row ID:", row_id)
+
+		
 		# Use parameterized query to avoid SQL injection
 		query = f"UPDATE {table} SET {field} = ? WHERE id = ?"
 		cursor.execute(query, (value, row_id))
@@ -87,6 +92,6 @@ def setup_db(db_name, table_schemas):
     conn.close()
 
 
-setup_db(GAMES_DB, [{"name": "games", "columns": "id INTEGER PRIMARY KEY, name TEXT, repo_name TEXT, channel_id INTEGER, owner TEXT"}])
-setup_db(TASKS_DB, [{"name": "tasks", "columns": "id INTEGER PRIMARY KEY AUTOINCREMENT, user_id TEXT NOT NULL, description TEXT NOT NULL, deadline TEXT, finished INTEGER DEFAULT 0, event_id INTEGER DEFAULT NULL"}])
-setup_db(EVENTS_DB, [{"name": "events", "columns": "Id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, triggered INTEGER DEFAULT 0"}])
+setup_db(Database.GAMES_DB, [{"name": "games", "columns": "id INTEGER PRIMARY KEY, name TEXT, repo_name TEXT, channel_id INTEGER, owner TEXT"}])
+setup_db(Database.TASKS_DB, [{"name": "tasks", "columns": "id INTEGER PRIMARY KEY AUTOINCREMENT, user_id TEXT NOT NULL, description TEXT NOT NULL, deadline TEXT, finished INTEGER DEFAULT 0, event_id INTEGER DEFAULT NULL"}])
+setup_db(Database.EVENTS_DB, [{"name": "events", "columns": "Id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, triggered INTEGER DEFAULT 0"}])
