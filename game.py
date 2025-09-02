@@ -21,15 +21,6 @@ class Game(commands.Cog):
 		await Game.send_game_info(ctx, game_info)
 
 
-	# @group.command()
-	# async def test(self, ctx: discord.ApplicationContext):
-	# 	game_info = Database.fetch_one_as_dict("dbs/games.db", "games", "id = ?", (1, ) )
-	# 	if not game_info:
-	# 		await ctx.respond("No game info found", ephemeral=True)
-	# 		return
-	# 	await Game.send_game_info(ctx, game_info)
-
-
 	@staticmethod
 	async def send_game_info(ctx, game_info):
 		embed = discord.Embed(
@@ -41,4 +32,13 @@ class Game(commands.Cog):
 		embed.add_field(name="Owner", value=game_info["owner"].split("(", 1)[1].rstrip(")").strip(), inline=True)
 		#embed.set_footer(text="Game Info Bot")
 
-		await ctx.send(embed=embed, ephemeral=True)
+		await ctx.respond(embed=embed, ephemeral=True)
+
+
+	# @group.command()
+	# async def test(self, ctx: discord.ApplicationContext):
+	# 	game_info = Database.fetch_one_as_dict("dbs/games.db", "games", "id = ?", (1, ) )
+	# 	if not game_info:
+	# 		await ctx.respond("No game info found", ephemeral=True)
+	# 		return
+	# 	await Game.send_game_info(ctx, game_info)
