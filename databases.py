@@ -17,6 +17,12 @@ class Database:
 
 
 	@staticmethod
+	def get_game_channel(game_id):
+		game = Database.fetch_one_as_dict(Database.GAMES_DB, "games", "id = ?", (game_id,))
+		return game["channel_id"] if game else None
+	
+
+	@staticmethod
 	def get_default_game_info():
 		return Database.fetch_one_as_dict(Database.GAMES_DB, "games", "id = ?", (1,))	
 
@@ -36,6 +42,17 @@ class Database:
 		Database.insert_into_db(Database.GAMES_DB, "asset_requests", game_id=game_id, asset_type=asset_type, content=content, context=context, requested_by=requested_by, status="Pending")	
 
 
+	@staticmethod
+	def mark_request_accepted(request_id, user):
+		Database.update_field(Database.GAMES_DB, "asset_requests", request_id, "status", "Accepted")
+		Database.update_field(Database.GAMES_DB, "asset_requests", request_id, "accepted_by", user)
+
+
+	@staticmethod
+	def get_asset_requests_by_type(type):
+		return Database.fetch_all_as_dict_arr(Database.GAMES_DB, "asset_requests", "asset_type = ? AND status = 'Pending'", (type,))
+	
+	
 	@staticmethod
 	def insert_into_db(db_path, table, **columns) -> bool:
 		conn = sqlite3.connect(db_path)
@@ -78,15 +95,6 @@ class Database:
 		conn = sqlite3.connect(db_path)
 		cursor = conn.cursor()
 
-		cursor.execute("PRAGMA database_list;")
-		print("database_list:", cursor.fetchall())
-
-		cursor.execute("SELECT name, sql FROM sqlite_master WHERE type='table';")
-		print("tables:", cursor.fetchall())
-
-		cursor.execute(f"SELECT COUNT(*) FROM {table};")
-		print("Row count:", cursor.fetchone()[0])
-
 		query = f"SELECT * FROM {table} WHERE {where} LIMIT 1"
 		print(f"Executing query: {query} with params: {params}")
 		cursor.execute(query, params)
@@ -100,6 +108,27 @@ class Database:
 		conn.close()
 
 		return dict(zip(col_names, row))
+
+
+	@staticmethod
+	def fetch_all_as_dict_arr(db_path: str, table: str, where: str = "1=1", params: tuple = ()) -> list[dict]:
+		conn = sqlite3.connect(db_path)
+		cursor = conn.cursor()
+
+		query = f"SELECT * FROM {table} WHERE {where}"
+		print(f"Executing query: {query} with params: {params}")
+		cursor.execute(query, params)
+		rows = cursor.fetchall()
+
+		if not rows:
+			print("No rows found")
+			conn.close()
+			return []
+
+		col_names = [desc[0] for desc in cursor.description]
+		conn.close()
+
+		return [dict(zip(col_names, row)) for row in rows]
 
 
 	@staticmethod
