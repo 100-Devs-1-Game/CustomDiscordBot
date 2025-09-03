@@ -48,9 +48,30 @@ class Game(commands.Cog):
 		)
 		embed.add_field(name="Repository", value=f"[GitHub Link]({GITHUB_URL_PREFIX + game_info['repo_name']})", inline=False)
 		embed.add_field(name="Owner", value=game_info["owner"].split("(", 1)[1].rstrip(")").strip(), inline=True)
-		#embed.set_footer(text="Game Info Bot")
+
+		rows= Game.fetch_contributors(game_info)
+		if rows:
+			contributors_str = "\n".join(f"**{name}** — {role}" for name, role in rows)
+		else:
+			contributors_str = "No contributors registered."
+
+		embed.add_field(
+			name="Contributors",
+			value=contributors_str,
+			inline=False
+		)
 
 		await ctx.respond(embed=embed, ephemeral=True)
+
+
+	@staticmethod
+	def fetch_contributors(game_info):
+		return Database.execute(Database.GAMES_DB, """
+			SELECT c.discord_display_name, gc.role
+			FROM game_contributors gc
+			JOIN contributors c ON c.id = gc.contributor_id
+			WHERE gc.game_id = ?
+		""", (game_info["id"],))
 
 
 	# @group.command()
@@ -60,9 +81,7 @@ class Game(commands.Cog):
 	# 		await ctx.respond("No game info found", ephemeral=True)
 	# 		return
 
-	# 	current_desc = game_info.get("description", "")
-	# 	modal = DescriptionModal(game_info["id"], current_desc)
-	# 	await ctx.send_modal(modal)
+	# 	await Game.send_game_info(ctx, game_info)
 
 
 
