@@ -1,12 +1,16 @@
+import os
 import discord
 from discord.ext import commands
 from databases import Database
 from discord import Interaction
 from discord.ui import Modal, InputText
-
 from utils import Utils
+from dotenv import load_dotenv
 
+
+load_dotenv()
 GITHUB_URL_PREFIX= "https://github.com/100-Devs-1-Game/"
+TEST_CHANNEL_ID = int(os.getenv("TEST_CHANNEL_ID", "0"))
 
 
 class Game(commands.Cog):
@@ -68,6 +72,14 @@ class Game(commands.Cog):
 		)
 
 		await ctx.respond(embed=embed, ephemeral=True)
+
+
+	@staticmethod
+	def get_channel_id(game_info: dict)-> int:
+		if Utils.is_test_environment():
+			return TEST_CHANNEL_ID	
+		else:
+			return game_info["channel_id"]
 
 
 	@staticmethod
