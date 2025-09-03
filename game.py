@@ -4,6 +4,8 @@ from databases import Database
 from discord import Interaction
 from discord.ui import Modal, InputText
 
+from utils import Utils
+
 GITHUB_URL_PREFIX= "https://github.com/100-Devs-1-Game/"
 
 
@@ -15,7 +17,7 @@ class Game(commands.Cog):
 
 	@group.command()
 	async def info(self, ctx: discord.ApplicationContext):
-		game_info = Database.get_game_info(ctx.channel.id)
+		game_info = Database.get_default_game_info() if Utils.is_test_environment() else Database.get_game_info(ctx.channel.id)
 		if not game_info:
 			await ctx.respond("No game info found for this channel.", ephemeral=True)
 			return
@@ -25,7 +27,7 @@ class Game(commands.Cog):
 
 	@group.command()
 	async def description(self, ctx: discord.ApplicationContext):
-		game_info = Database.get_game_info(ctx.channel.id)
+		game_info = Database.get_default_game_info() if Utils.is_test_environment() else Database.get_game_info(ctx.channel.id)
 		if not game_info:
 			await ctx.respond("No game associated with this channel.", ephemeral=True)
 			return
@@ -41,9 +43,13 @@ class Game(commands.Cog):
 
 	@staticmethod
 	async def send_game_info(ctx, game_info):
+		description=game_info.get("description", "")
+		if not description:
+			description="No description provided. Use `/game description` to add one."
+			
 		embed = discord.Embed(
 			title=game_info["name"],
-			description=game_info.get("description", "No description available."),
+			description=description,
 			color=discord.Color.blurple()
 		)
 		embed.add_field(name="Repository", value=f"[GitHub Link]({GITHUB_URL_PREFIX + game_info['repo_name']})", inline=False)
@@ -72,18 +78,6 @@ class Game(commands.Cog):
 			JOIN contributors c ON c.id = gc.contributor_id
 			WHERE gc.game_id = ?
 		""", (game_info["id"],))
-
-
-	# @group.command()
-	# async def test(self, ctx: discord.ApplicationContext):
-	# 	game_info = Database.fetch_one_as_dict(Database.GAMES_DB, "games", "id = ?", (1, ) )
-	# 	if not game_info:
-	# 		await ctx.respond("No game info found", ephemeral=True)
-	# 		return
-
-	# 	await Game.send_game_info(ctx, game_info)
-
-
 
 
 
