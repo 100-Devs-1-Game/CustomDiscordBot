@@ -17,6 +17,11 @@ class Database:
 
 
 	@staticmethod
+	def get_default_game_info():
+		return Database.fetch_one_as_dict(Database.GAMES_DB, "games", "id = ?", (1,))	
+
+
+	@staticmethod
 	def add_task(user_id, description, deadline=None, event_id=None):
 		Database.insert_into_db(Database.TASKS_DB, "tasks", user_id=user_id, description=description, deadline=deadline, event_id=event_id)
 
