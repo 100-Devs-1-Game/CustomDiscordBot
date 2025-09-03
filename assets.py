@@ -116,6 +116,7 @@ class AssetTypeSelect(discord.ui.Select):
 				)
 				return
 
+			first= True
 			for req in rows:
 				request_id = req["id"]
 				content = req["content"]
@@ -133,7 +134,11 @@ class AssetTypeSelect(discord.ui.Select):
 				else:
 					view = RequestView(req, Database.get_game_info(channel_id))
 					
-				await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
+				if first:
+					await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
+					first= False
+				else:
+					await interaction.followup.send(embed=embed, view=view, ephemeral=True)	
 
 
 
