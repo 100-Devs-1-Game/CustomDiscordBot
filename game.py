@@ -26,7 +26,7 @@ class Game(commands.Cog):
 
 
 	@group.command()
-	async def description(self, ctx: discord.ApplicationContext):
+	async def setdescription(self, ctx: discord.ApplicationContext):
 		game_info = Database.get_default_game_info() if Utils.is_test_environment() else Database.get_game_info(ctx.channel.id)
 		if not game_info:
 			await ctx.respond("No game associated with this channel.", ephemeral=True)
