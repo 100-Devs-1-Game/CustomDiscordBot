@@ -97,6 +97,16 @@ class Database:
 		return Database.fetch_one_as_dict(db_path, table, f"{field} = ?", (value,)) is not None
 
 
+	@staticmethod
+	def execute(db_path: str, query: str, params: tuple = ()) -> list[tuple]:
+		conn = sqlite3.connect(db_path)
+		cursor = conn.cursor()
+		cursor.execute(query, params)
+		rows = cursor.fetchall()
+		conn.close()
+		return rows
+
+
 
 def setup_db(db_name, table_schemas):
 	conn = sqlite3.connect(db_name)
