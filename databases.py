@@ -49,8 +49,22 @@ class Database:
 
 
 	@staticmethod
-	def get_asset_requests_by_type(type):
-		return Database.fetch_all_as_dict_arr(Database.GAMES_DB, "asset_requests", "asset_type = ? AND status = 'Pending'", (type,))
+	def mark_request_finished(request_id):
+		Database.update_field(Database.GAMES_DB, "asset_requests", request_id, "status", "Finished")
+
+
+	@staticmethod
+	def get_asset_requests_by_type(type, status= "Pending", user= None):
+		if user:
+			return Database.fetch_all_as_dict_arr(
+				Database.GAMES_DB,
+				"asset_requests",
+				#"asset_type = ? AND status = ? AND substr(requested_by, 1, instr(requested_by, ' ') - 1) = ?",
+				"asset_type = ? AND status = ? AND requested_by = ?",
+				(type, status, user),
+			)
+		else:
+			return Database.fetch_all_as_dict_arr(Database.GAMES_DB, "asset_requests", f"asset_type = ? AND status = '{status}'", (type,))
 	
 	
 	@staticmethod
