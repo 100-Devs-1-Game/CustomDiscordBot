@@ -5,7 +5,6 @@ class Database:
 	GAMES_DB = "dbs/games.db"
 	TASKS_DB = "dbs/tasks.db"
 	EVENTS_DB = "dbs/events.db"
-	
 
 	@staticmethod
 	def add_game(name, repo_name, channel_id, owner):
@@ -21,9 +20,15 @@ class Database:
 	def add_task(user_id, description, deadline=None, event_id=None):
 		Database.insert_into_db(Database.TASKS_DB, "tasks", user_id=user_id, description=description, deadline=deadline, event_id=event_id)
 
+
 	@staticmethod
 	def register_contributor(discord_username, credit_name, discord_display_name=None, itch_io_link=None, alt_link=None):
 		Database.insert_into_db(Database.GAMES_DB, "contributors", discord_username=discord_username, credit_name=credit_name, discord_display_name=discord_display_name, itch_io_link=itch_io_link, alt_link=alt_link)
+
+
+	@staticmethod
+	def add_asset_request(game_id, asset_type, content, context, requested_by):
+		Database.insert_into_db(Database.GAMES_DB, "asset_requests", game_id=game_id, asset_type=asset_type, content=content, context=context, requested_by=requested_by, status="Pending")	
 
 
 	@staticmethod
@@ -122,3 +127,4 @@ setup_db(Database.TASKS_DB, [{"name": "tasks", "columns": "id INTEGER PRIMARY KE
 setup_db(Database.EVENTS_DB, [{"name": "events", "columns": "id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, triggered INTEGER DEFAULT 0"}])
 setup_db(Database.GAMES_DB, [{"name": "contributors", "columns": "id INTEGER PRIMARY KEY AUTOINCREMENT, discord_username TEXT NOT NULL, discord_display_name TEXT, credit_name TEXT NOT NULL, itch_io_link TEXT, alt_link TEXT"}])
 setup_db(Database.GAMES_DB, [{"name": "game_contributors", "columns": "game_id INTEGER NOT NULL, contributor_id INTEGER NOT NULL, role TEXT NOT NULL, PRIMARY KEY (game_id, contributor_id, role), FOREIGN KEY (game_id) REFERENCES games(id), FOREIGN KEY (contributor_id) REFERENCES contributors(id)"}])
+setup_db(Database.GAMES_DB, [{"name": "asset_requests", "columns": "id INTEGER PRIMARY KEY AUTOINCREMENT, game_id INTEGER NOT NULL, asset_type TEXT NOT NULL, content TEXT NOT NULL, context TEXT, requested_by TEXT NOT NULL, accepted_by TEXT, status TEXT NOT NULL, FOREIGN KEY (game_id) REFERENCES games(id)"}])
