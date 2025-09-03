@@ -15,7 +15,7 @@ class Contributors(commands.Cog):
 
 	group = discord.SlashCommandGroup("contributors", "Contributor commands")	
 
-	@group.command()
+	@group.command(description="Register yourself as a contributor on our Server")
 	async def register(self, ctx: discord.ApplicationContext):
 		modal = ContributorRegisterModal(
 			discord_username=str(ctx.author),
@@ -24,7 +24,7 @@ class Contributors(commands.Cog):
 		await ctx.send_modal(modal)
 
 
-	@group.command()
+	@group.command(description="Add a contributor to your game from your game channel")
 	async def add(self, ctx: discord.ApplicationContext, member: discord.Member):
 		game_info = Database.get_game_info(ctx.channel.id)
 		if not game_info:

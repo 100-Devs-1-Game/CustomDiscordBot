@@ -69,7 +69,7 @@ class Onboarding(commands.Cog):
 
 	group = discord.SlashCommandGroup("onboarding", "Onboarding commands")
 
-	@group.command(name="test")
+	@group.command(name="test", description="Test the onboarding message")
 	async def test(self, ctx: discord.ApplicationContext):
 		"""Test the onboarding message."""
 		embed = self.build_onboarding_embed(ctx.guild)

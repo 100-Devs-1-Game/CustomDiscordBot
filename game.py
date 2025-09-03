@@ -17,9 +17,9 @@ class Game(commands.Cog):
 	def __init__(self, bot: discord.Bot):
 		self.bot = bot
 
-	group = discord.SlashCommandGroup("game", "100 Games in 100 Days commands")
+	group = discord.SlashCommandGroup("game", "Game channel commands")
 
-	@group.command()
+	@group.command(description="Show information about the game associated with this channel")
 	async def info(self, ctx: discord.ApplicationContext):
 		game_info = Database.get_default_game_info() if Utils.is_test_environment() else Database.get_game_info(ctx.channel.id)
 		if not game_info:
@@ -29,7 +29,7 @@ class Game(commands.Cog):
 		await Game.send_game_info(ctx, game_info)
 
 
-	@group.command()
+	@group.command(description="Set or update the description for your game")
 	async def setdescription(self, ctx: discord.ApplicationContext):
 		game_info = Database.get_default_game_info() if Utils.is_test_environment() else Database.get_game_info(ctx.channel.id)
 		if not game_info:

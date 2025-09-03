@@ -8,7 +8,7 @@ class Help(commands.Cog):
 
 	group = discord.SlashCommandGroup("help", "Help commands")	
 
-	@group.command()
+	@group.command(description="Show information about the current channel")
 	async def channel(self, ctx: discord.ApplicationContext):
 		if isinstance(ctx.channel, discord.TextChannel):
 			desc = ctx.channel.topic or "No description set for this channel."

@@ -44,7 +44,7 @@ class GameChannel(commands.Cog):
 	def __init__(self, bot: discord.Bot):
 		self.bot = bot
 
-	@discord.slash_command(description="Close Thread, Create new Channel for Game, Copy Content, Create Repository")
+	@discord.slash_command(description="Close Game Idea Thread, Create new Channel for Game, Create Repository on Github")
 	@option("game_name", description="Name of game")
 	async def create_game(self, ctx: discord.ApplicationContext, game_name: str):
 		if not isinstance(ctx.channel, discord.Thread):

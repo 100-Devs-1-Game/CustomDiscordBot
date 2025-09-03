@@ -6,6 +6,6 @@ class Fun(commands.Cog):
 	def __init__(self, bot: discord.Bot):
 		self.bot = bot
 
-	@discord.slash_command()
+	@discord.slash_command(description="Are we having fun?")
 	async def fun(self, ctx: discord.ApplicationContext):
-		await ctx.respond("Yes we are having fun!")
+		await ctx.respond("Yes, we are having fun!")

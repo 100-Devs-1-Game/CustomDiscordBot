@@ -20,7 +20,7 @@ class Assets(commands.Cog):
 
 	group = discord.SlashCommandGroup("assets", "Assets commands")	
 
-	@group.command()
+	@group.command(description="Request an asset for your game from your game channel")
 	async def request(self, ctx: discord.ApplicationContext):
 		game_info = Database.get_default_game_info() if Utils.is_test_environment() else Database.get_game_info(ctx.channel.id)
 		if not game_info:
@@ -35,13 +35,13 @@ class Assets(commands.Cog):
 		await ctx.respond("Pick an asset type to request:", view=view, ephemeral=True)
 
 
-	@group.command()
+	@group.command(description="List all pending asset requests")
 	async def listrequests(self, ctx: discord.ApplicationContext):
 		view = AssetSelectView(self.ASSET_TYPES, {}, action="list")
 		await ctx.respond("Pick an asset type to list requests:", view=view, ephemeral=True)
 
 
-	@group.command()
+	@group.command(description="List all asset requests that you have accepted")
 	async def listaccepted(self, ctx: discord.ApplicationContext):
 		view = AssetSelectView(self.ASSET_TYPES, {}, action="list", user= str(ctx.author))
 		await ctx.respond("Pick an asset type to list requests:", view=view, ephemeral=True)
