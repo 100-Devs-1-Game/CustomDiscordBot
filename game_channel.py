@@ -7,6 +7,7 @@ from discord import option
 from dotenv import load_dotenv
 from github import Auth, Github
 from databases import Database
+from utils import Utils
 
 
 FORUM_ID = 1411735698951639193 
@@ -50,7 +51,7 @@ class GameChannel(commands.Cog):
 		if not isinstance(ctx.channel, discord.Thread):
 			await ctx.respond("You need to run this inside a forum thread.", ephemeral=True)
 			return
-		if FORUM_ID > -1 and ctx.channel.parent_id != FORUM_ID:
+		if FORUM_ID > -1 and ctx.channel.parent_id != FORUM_ID and not Utils.is_test_environment():
 			await ctx.respond("This thread is not part of the correct forum.", ephemeral=True)
 			return
 		if ctx.channel.locked:
