@@ -142,6 +142,8 @@ def sanitize_repo_name(name: str) -> str:
 		return name
 	
 	name = name.replace("_", " ")
+	name = name.replace("-", " ")
+	
 	name = re.sub(r"[^a-zA-Z0-9 ]", "", name)
 	# split words by spaces, capitalize first letter of each
 	words = name.split()
