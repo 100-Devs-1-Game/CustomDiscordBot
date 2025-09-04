@@ -19,8 +19,6 @@ CHANNEL_CATEGORY = 1411870610279366686
 # load all the variables from the env file
 load_dotenv()
 
-GUILD_IDS = [int(os.getenv("GUILD_ID"))]  # your server IDs
-
 # GitHub App credentials
 GITHUB_APP_ID = os.getenv("GITHUB_APP_ID")  # GitHub App ID
 PRIVATE_KEY_PATH = Path(
