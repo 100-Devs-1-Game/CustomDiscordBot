@@ -70,28 +70,28 @@ class GameChannel(commands.Cog):
 			await ctx.respond(f"Repo {repo_name_sanitized} already exists: {existing.html_url}", ephemeral=True)
 			return
 		else:
-			repo= GITHUB_ORG.create_repo_from_template(
-				repo=GITHUB.get_repo("100-Devs-1-Game/MinimalProjectTemplate"),
-				name=repo_name_sanitized,
-				description=f"Repository for the game {game_name} - for 100 Games in 100 Days",
-				private=False,
-				include_all_branches=False,
-			)
-
+			url= ""
+			if not Utils.is_test_environment():
+				repo= GITHUB_ORG.create_repo_from_template(
+					repo=GITHUB.get_repo("100-Devs-1-Game/MinimalProjectTemplate"),
+					name=repo_name_sanitized,
+					description=f"Repository for the game {game_name} - for 100 Games in 100 Days",
+					private=False,
+					include_all_branches=False,
+				)
+				url= repo.html_url
 
 		thread = ctx.channel
 		guild = ctx.guild
 
-		category = guild.get_channel(CHANNEL_CATEGORY)  # category ID
+		category = guild.get_channel(CHANNEL_CATEGORY)
 		
 		# create new text channel
 		new_channel = await guild.create_text_channel(
 			name=game_name,
-			topic=f"Copy of {thread.jump_url}\nRepository: {repo.html_url}\nOwner: {ctx.author.mention}",
+			topic=f"Copy of {thread.jump_url}\nRepository: {url}\nOwner: {ctx.author.mention}",
 			category=category
 		)
-
-		#await ctx.respond(f"Creating <#{new_channel.id}>…", ephemeral=True)
 
 		# lock thread
 		await thread.edit(
@@ -105,12 +105,13 @@ class GameChannel(commands.Cog):
 		# add link to new channel in old thread
 		await thread.send(f"Thread closed. Continued in {new_channel.mention}")
 
-
 		await self.copy_messages(thread, new_channel)
 
 
 	async def copy_messages(self, thread, new_channel):
 		async for msg in thread.history(oldest_first=True):
+			if msg.author == self.bot.user:
+				return
 			content = f"**{msg.author.display_name}:** {msg.content}"
 			if msg.attachments:
 				for att in msg.attachments:
@@ -143,7 +144,7 @@ def sanitize_repo_name(name: str) -> str:
 	
 	name = name.replace("_", " ")
 	name = name.replace("-", " ")
-	
+
 	name = re.sub(r"[^a-zA-Z0-9 ]", "", name)
 	# split words by spaces, capitalize first letter of each
 	words = name.split()
