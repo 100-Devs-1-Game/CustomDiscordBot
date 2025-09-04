@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 GUILD_ID = int(os.getenv("GUILD_ID"))
+ANNOUNCE_CHANNEL_ID = int(os.getenv("ANNOUNCE_CHANNEL_ID", 0))
 
 
 
@@ -79,11 +80,19 @@ class AssetRequestModal(discord.ui.Modal):
 			requested_by=str(interaction.user.name)
 		)
 
+		assert ANNOUNCE_CHANNEL_ID > 0, "ANNOUNCE_CHANNEL_ID is not set in environment variables."
+		
+		channel = interaction.client.get_channel(ANNOUNCE_CHANNEL_ID)
+		await channel.send(
+			f"[{self.asset_type}] **{content}**\n"
+			f"*{context}*\n"
+			f"<#{self.game_info['channel_id']}>"
+		)
+
+
 		await interaction.response.send_message(
-			f"**Asset Request Submitted**\n"
-			f"Type: {self.asset_type}\n"
-			f"Content: {content}\n"
-			f"Context: {context}",
+			f"**[{self.asset_type}]** Asset Request Submitted\n"
+			f"( {content} )"
 			#ephemeral=True
 		)
 
