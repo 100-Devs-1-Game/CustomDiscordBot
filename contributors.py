@@ -132,8 +132,15 @@ class ContributionRoleSelect(discord.ui.Select):
 			role=chosen_role
 		)
 
+		contributor= Database.fetch_one_as_dict(
+			Database.GAMES_DB,
+			"contributors",
+			"id = ?",
+			(self.contributor_id,)
+		)
+
 		await interaction.response.send_message(
-			f"✅ Added contributor with role: **{chosen_role}**",
+			f"✅ Added contributor **{contributor['discord_display_name']}** with role: **{chosen_role}**",
 			#ephemeral=True
 		)
 
