@@ -108,10 +108,10 @@ class GameChannel(commands.Cog):
 		await thread.send(f"Thread closed. Continued in {new_channel.mention}")
 
 
-		await self.copy_messages(self, thread, new_channel)
+		await self.copy_messages(thread, new_channel)
 
 
-	async def copy_messages(thread, new_channel):
+	async def copy_messages(self, thread, new_channel):
 		async for msg in thread.history(oldest_first=True):
 			content = f"**{msg.author.display_name}:** {msg.content}"
 			if msg.attachments:
