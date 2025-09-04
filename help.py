@@ -24,3 +24,22 @@ class Help(commands.Cog):
 				color=discord.Color.red()
 			)
 		await ctx.respond(embed=embed, ephemeral=True)
+
+
+	@group.command(description="How to access our GitHub organization")
+	async def github(self, ctx: discord.ApplicationContext):
+		embed = discord.Embed(
+			title="Github Access",
+			description="You need to request an invite to our GitHub organization here <#1395558585173409882>",
+			url= "https://github.com/orgs/100-Devs-1-Game"
+		)	
+		await ctx.respond(embed=embed, ephemeral=True)
+
+
+	@group.command(description="Link to our guide for the 100 Games challenge")
+	async def guide(self, ctx: discord.ApplicationContext):
+		embed = discord.Embed(
+			title="100 Games in 100 Days Guide",
+			url= "https://docs.google.com/document/d/1BL1erhDZDM8XW_X2w3OuT16gAEbvKB8ZxjXn0cByAJ4/edit?usp=drive_link"
+		)	
+		await ctx.respond(embed=embed, ephemeral=True)
