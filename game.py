@@ -49,7 +49,7 @@ class Game(commands.Cog):
 	async def send_game_info(ctx, game_info):
 		description=game_info.get("description", "")
 		if not description:
-			description="No description provided. Use `/game description` to add one."
+			description="No description provided. Use `/game setdescription` to add one."
 			
 		embed = discord.Embed(
 			title=game_info["name"],
