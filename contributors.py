@@ -39,7 +39,7 @@ class Contributors(commands.Cog):
 			Database.GAMES_DB,
 			"contributors",
 			"discord_username = ?",
-			(str(member),)
+			(str(member.name),)
 		)
 
 		if not contributor:
