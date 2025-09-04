@@ -8,7 +8,7 @@ class Database:
 
 	@staticmethod
 	def add_game(name, repo_name, channel_id, owner):
-		Database.insert_into_db(Database.GAMES_DB, "games", name=name, repo_name=repo_name, channel_id=channel_id, owner=owner)	
+		Database.insert_into_db(Database.GAMES_DB, "games", name=name, repo_name=repo_name, channel_id=channel_id, owner=owner.name, owner_display_name=owner.display_name)	
 
 
 	@staticmethod
@@ -175,4 +175,4 @@ setup_db(Database.TASKS_DB, [{"name": "tasks", "columns": "id INTEGER PRIMARY KE
 setup_db(Database.EVENTS_DB, [{"name": "events", "columns": "id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, triggered INTEGER DEFAULT 0"}])
 setup_db(Database.GAMES_DB, [{"name": "contributors", "columns": "id INTEGER PRIMARY KEY AUTOINCREMENT, discord_username TEXT NOT NULL, discord_display_name TEXT, credit_name TEXT NOT NULL, itch_io_link TEXT, alt_link TEXT"}])
 setup_db(Database.GAMES_DB, [{"name": "game_contributors", "columns": "game_id INTEGER NOT NULL, contributor_id INTEGER NOT NULL, role TEXT NOT NULL, PRIMARY KEY (game_id, contributor_id, role), FOREIGN KEY (game_id) REFERENCES games(id), FOREIGN KEY (contributor_id) REFERENCES contributors(id)"}])
-setup_db(Database.GAMES_DB, [{"name": "asset_requests", "columns": "id INTEGER PRIMARY KEY AUTOINCREMENT, game_id INTEGER NOT NULL, asset_type TEXT NOT NULL, content TEXT NOT NULL, context TEXT, requested_by TEXT NOT NULL, accepted_by TEXT, status TEXT NOT NULL, FOREIGN KEY (game_id) REFERENCES games(id)"}])
+setup_db(Database.GAMES_DB, [{"name": "asset_requests", "columns": "id INTEGER PRIMARY KEY AUTOINCREMENT, game_id INTEGER NOT NULL, asset_type TEXT NOT NULL, content TEXT NOT NULL, context TEXT, requested_by INTEGER NOT NULL, accepted_by INTEGER, status TEXT NOT NULL, FOREIGN KEY (game_id) REFERENCES games(id), FOREIGN KEY (requested_by) REFERENCES contributors(id), FOREIGN KEY (accepted_by) REFERENCES contributors(id)"}])

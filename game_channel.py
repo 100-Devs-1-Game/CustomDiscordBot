@@ -101,7 +101,7 @@ class GameChannel(commands.Cog):
 			name=f"[LOCKED] {thread.name}"
 		)
 
-		Database.add_game(game_name, repo.name, new_channel.id, str(ctx.author))
+		Database.add_game(game_name, repo.name, new_channel.id, ctx.author)
 
 		# add link to new channel in old thread
 		await thread.send(f"Thread closed. Continued in {new_channel.mention}")

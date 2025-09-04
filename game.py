@@ -36,7 +36,7 @@ class Game(commands.Cog):
 			await ctx.respond("No game associated with this channel.", ephemeral=True)
 			return
 
-		if ctx.author.name not in game_info["owner"]:
+		if ctx.author.name != game_info["owner"]:
 			await ctx.respond("Only the game owner can update the description.", ephemeral=True)
 			return
 
@@ -57,7 +57,7 @@ class Game(commands.Cog):
 			color=discord.Color.blurple()
 		)
 		embed.add_field(name="Repository", value=f"[GitHub Link]({GITHUB_URL_PREFIX + game_info['repo_name']})", inline=False)
-		embed.add_field(name="Owner", value=game_info["owner"].split("(", 1)[1].rstrip(")").strip(), inline=True)
+		embed.add_field(name="Owner", value=game_info["owner_display_name"])
 
 		rows= Game.fetch_contributors(game_info)
 		if rows:

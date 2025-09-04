@@ -18,7 +18,7 @@ class Contributors(commands.Cog):
 	@group.command(description="Register yourself as a contributor on our Server")
 	async def register(self, ctx: discord.ApplicationContext):
 		modal = ContributorRegisterModal(
-			discord_username=str(ctx.author),
+			discord_username=str(ctx.author.name),
 			discord_display_name=ctx.author.display_name,
 		)
 		await ctx.send_modal(modal)
@@ -31,7 +31,7 @@ class Contributors(commands.Cog):
 			await ctx.respond("⚠️ No game found for this channel.", ephemeral=True)
 			return
 
-		if ctx.author.display_name not in game_info["owner"]:
+		if ctx.author.name != game_info["owner"]:
 			await ctx.respond("❌ Only the game owner can add contributors.", ephemeral=True)
 			return
 		
@@ -57,42 +57,6 @@ class Contributors(commands.Cog):
             view=ContributionRoleView(game_info["id"], contributor["id"]),
             ephemeral=True
         )
-
-
-	# @group.command()
-	# async def test(self, ctx: discord.ApplicationContext, member: discord.Member):
-	# 	game_info = Database.fetch_one_as_dict(Database.GAMES_DB, "games", "id = ?", (1, ) )
-		
-	# 	if not game_info:
-	# 		await ctx.respond("⚠️ No game found for this channel.", ephemeral=True)
-	# 		return
-
-	# 	if ctx.author.display_name not in game_info["owner"]:
-	# 		await ctx.respond("❌ Only the game owner can add contributors.", ephemeral=True)
-	# 		return
-
-	# 	contributor = Database.fetch_one_as_dict(
-	# 		Database.GAMES_DB,
-	# 		"contributors",
-	# 		"discord_username = ?",
-	# 		(str(member),)
-	# 	)
-
-	# 	if not contributor:
-	# 		# not registered — tell owner how to get them registered
-	# 		await ctx.respond(
-	# 			f"{member.display_name} is not registered as a contributor. "
-	# 			"Ask them to run `/contributors register`.",
-	# 			ephemeral=True
-	# 		)
-	# 		return
-
-	# 	# show role dropdown
-	# 	await ctx.respond(
-	# 		f"Select contributors role for **member: {member.display_name}**:",
-    #         view=ContributionRoleView(game_info["id"], contributor["id"]),
-    #         ephemeral=True
-    #     )
 
 
 
