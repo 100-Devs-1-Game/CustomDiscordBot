@@ -13,7 +13,7 @@ GUILD_ID = int(os.getenv("GUILD_ID"))
 
 
 class Assets(commands.Cog):
-	ASSET_TYPES = [ "2D Art", "3D Art", "SFX", "Music", "Voice", "Narrative" ]
+	ASSET_TYPES = [ "2D Art", "3D Art", "SFX", "Music", "Voice", "Narrative", "UI" ]
 	
 	def __init__(self, bot: discord.Bot):
 		self.bot = bot
