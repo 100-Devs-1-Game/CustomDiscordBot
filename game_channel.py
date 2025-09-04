@@ -7,6 +7,7 @@ from discord import option
 from dotenv import load_dotenv
 from github import Auth, Github
 from databases import Database
+from utils import Utils
 
 
 FORUM_ID = 1411735698951639193 
@@ -50,7 +51,7 @@ class GameChannel(commands.Cog):
 		if not isinstance(ctx.channel, discord.Thread):
 			await ctx.respond("You need to run this inside a forum thread.", ephemeral=True)
 			return
-		if FORUM_ID > -1 and ctx.channel.parent_id != FORUM_ID:
+		if FORUM_ID > -1 and ctx.channel.parent_id != FORUM_ID and not Utils.is_test_environment():
 			await ctx.respond("This thread is not part of the correct forum.", ephemeral=True)
 			return
 		if ctx.channel.locked:
@@ -101,16 +102,16 @@ class GameChannel(commands.Cog):
 			name=f"[LOCKED] {thread.name}"
 		)
 
-		Database.add_game(game_name, repo.name, new_channel.id, str(ctx.author))
+		Database.add_game(game_name, repo.name, new_channel.id, ctx.author)
 
 		# add link to new channel in old thread
 		await thread.send(f"Thread closed. Continued in {new_channel.mention}")
 
 
-		await self.copy_messages(self, thread, new_channel)
+		await self.copy_messages(thread, new_channel)
 
 
-	async def copy_messages(thread, new_channel):
+	async def copy_messages(self, thread, new_channel):
 		async for msg in thread.history(oldest_first=True):
 			content = f"**{msg.author.display_name}:** {msg.content}"
 			if msg.attachments:

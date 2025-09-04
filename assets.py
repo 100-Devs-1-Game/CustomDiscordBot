@@ -27,7 +27,7 @@ class Assets(commands.Cog):
 			await ctx.respond("⚠️ No game found for this channel.", ephemeral=True)
 			return
 
-		if ctx.author.display_name not in game_info["owner"]:
+		if ctx.author.name != game_info["owner"]:
 			await ctx.respond("❌ Only the game owner can request assets.", ephemeral=True)
 			return
 
@@ -43,7 +43,7 @@ class Assets(commands.Cog):
 
 	@group.command(description="List all asset requests that you have accepted")
 	async def listaccepted(self, ctx: discord.ApplicationContext):
-		view = AssetSelectView(self.ASSET_TYPES, {}, action="list", user= str(ctx.author))
+		view = AssetSelectView(self.ASSET_TYPES, {}, action="list", user= str(ctx.author.name))
 		await ctx.respond("Pick an asset type to list requests:", view=view, ephemeral=True)
 
 
@@ -76,7 +76,7 @@ class AssetRequestModal(discord.ui.Modal):
 			asset_type=self.asset_type,
 			content=content,
 			context=context,
-			requested_by=str(interaction.user)
+			requested_by=str(interaction.user.name)
 		)
 
 		await interaction.response.send_message(
@@ -157,11 +157,12 @@ class AcceptButton(discord.ui.Button):
 
 
 	async def callback(self, interaction: discord.Interaction):
-		Database.mark_request_accepted(self.request["id"], str(interaction.user))
+		Database.mark_request_accepted(self.request["id"], str(interaction.user.name))
 		
 		channel = interaction.client.get_channel(Game.get_channel_id(self.game_info))
 		await channel.send(
-			f"👷 Asset request **{self.request['content']}** accepted by {interaction.user.mention}"
+			f"👷 Asset request **{self.request['content']}** accepted by {interaction.user.mention}",
+			allowed_mentions=discord.AllowedMentions.none()
 		)
 
 		await interaction.response.send_message(
