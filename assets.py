@@ -129,7 +129,7 @@ class AssetTypeSelect(discord.ui.Select):
 			for req in rows:
 				request_id = req["id"]
 				content = req["content"]
-				context = req["context"] or "N/A"
+				context = req["context"] or ""
 				channel_id = Database.get_game_channel(req["game_id"])
 
 				embed = discord.Embed(
