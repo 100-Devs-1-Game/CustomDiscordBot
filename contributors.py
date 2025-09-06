@@ -43,10 +43,11 @@ class Contributors(commands.Cog):
 		)
 
 		if not contributor:
+			ctx.channel.send(f"⚠️ {member.mention} please register as a contributor on our server ( /contributors register ).")
+
 			# not registered — tell owner how to get them registered
 			await ctx.respond(
-				f"{member.display_name} is not registered as a contributor. "
-				"Ask them to run `/contributors register`.",
+				f"{member.display_name} is not registered as a contributor.",
 				ephemeral=True
 			)
 			return
