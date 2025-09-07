@@ -54,6 +54,12 @@ class Database:
 
 
 	@staticmethod
+	def is_request_pending(request: dict) -> bool:
+		row = Database.fetch_one_as_dict(Database.GAMES_DB, "asset_requests", "id = ? AND status = 'Pending'", (request["id"],))
+		return row is not None
+
+
+	@staticmethod
 	def get_asset_requests_by_type(type, status= "Pending", user= None):
 		if user:
 			return Database.fetch_all_as_dict_arr(

@@ -70,25 +70,20 @@ class AssetRequestModal(discord.ui.Modal):
 
 	async def callback(self, interaction: discord.Interaction):
 		content = self.children[0].value
-		context = self.children[1].value if self.children[1].value else "N/A"
+		context = self.children[1].value
 
-		Database.add_asset_request(
-			game_id=self.game_info["id"],
-			asset_type=self.asset_type,
-			content=content,
-			context=context,
-			requested_by=str(interaction.user.name)
-		)
+		Database.add_asset_request( game_id=self.game_info["id"], asset_type=self.asset_type, content=content, context=context, requested_by=str(interaction.user.name) )
 
 		assert ANNOUNCE_CHANNEL_ID > 0, "ANNOUNCE_CHANNEL_ID is not set in environment variables."
 		
 		channel = interaction.client.get_channel(ANNOUNCE_CHANNEL_ID)
-		await channel.send(
-			f"[{self.asset_type}] **{content}**\n"
-			f"*{context}*\n"
-			f"<#{self.game_info['channel_id']}>"
-		)
-
+		
+		msg= f"[{self.asset_type}] **{content}**\n"
+		if context:
+			msg += f"*{context}*\n"
+		msg += f"<#{self.game_info['channel_id']}>"
+		
+		await channel.send(msg)
 
 		await interaction.response.send_message(
 			f"**[{self.asset_type}]** Asset Request Submitted\n"
@@ -166,6 +161,12 @@ class AcceptButton(discord.ui.Button):
 
 
 	async def callback(self, interaction: discord.Interaction):
+		if not Database.is_request_pending(self.request):
+			await interaction.response.send_message(
+				"⚠️ This request has already been accepted", ephemeral=True
+			)
+			return
+
 		Database.mark_request_accepted(self.request["id"], str(interaction.user.name))
 		
 		channel = interaction.client.get_channel(Game.get_channel_id(self.game_info))
