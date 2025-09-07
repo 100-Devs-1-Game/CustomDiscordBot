@@ -74,7 +74,7 @@ class Game(commands.Cog):
 		embed.add_field(name="Repository", value=f"[GitHub Link]({GITHUB_URL_PREFIX + game_info['repo_name']})", inline=False)
 		embed.add_field(name="Owner", value=game_info["owner_display_name"])
 
-		rows= Game.fetch_contributors(game_info)
+		rows= Game.fetch_contributors(game_info, "discord_display_name")
 		if rows:
 			contributors_str = "\n".join(f"**{name}** — {role}" for name, role in rows)
 		else:
@@ -98,9 +98,9 @@ class Game(commands.Cog):
 
 
 	@staticmethod
-	def fetch_contributors(game_info):
-		return Database.execute(Database.GAMES_DB, """
-			SELECT c.discord_display_name, gc.role
+	def fetch_contributors(game_info: dict, name="credit_name"):
+		return Database.execute(Database.GAMES_DB, f"""
+			SELECT c.{name}, gc.role
 			FROM game_contributors gc
 			JOIN contributors c ON c.id = gc.contributor_id
 			WHERE gc.game_id = ?

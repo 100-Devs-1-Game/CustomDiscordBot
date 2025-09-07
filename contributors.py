@@ -3,6 +3,9 @@ from discord.ext import commands
 from discord import Interaction
 from discord.ui import Modal, InputText
 from databases import Database
+from utils import Utils
+from collections import defaultdict
+from game import Game
 
 
 CONTRIBUTION_TYPES = [ "Programmer", "2D Artist", "3D Artist", "Composer", "Sound Designer", "Writer", "Voice Actor"]
@@ -26,7 +29,7 @@ class Contributors(commands.Cog):
 
 	@group.command(description="Add a contributor to your game from your game channel")
 	async def add(self, ctx: discord.ApplicationContext, member: discord.Member):
-		game_info = Database.get_game_info(ctx.channel.id)
+		game_info = Database.get_default_game_info() if Utils.is_test_environment() else Database.get_game_info(ctx.channel.id)
 		if not game_info:
 			await ctx.respond("⚠️ No game found for this channel.", ephemeral=True)
 			return
@@ -58,6 +61,56 @@ class Contributors(commands.Cog):
             view=ContributionRoleView(game_info["id"], contributor["id"]),
             ephemeral=True
         )
+
+
+	@group.command(description="Export the list of contributors for the credits")
+	async def export(self, ctx: discord.ApplicationContext):
+		game_info = Database.get_default_game_info() if Utils.is_test_environment() else Database.get_game_info(ctx.channel.id)
+		if not game_info:
+			await ctx.respond("⚠️ No game found for this channel.", ephemeral=True)
+			return
+
+		owner_credit_name = Database.fetch_one_as_dict(
+			Database.GAMES_DB,
+			"contributors",
+			"discord_username = ?",
+			(game_info["owner"],)
+		)
+
+		if not owner_credit_name:
+			await ctx.respond("⚠️ Owner isn't registered as a contributor.", ephemeral=True)
+			return
+
+
+		contributors = Game.fetch_contributors(game_info, "credit_name")
+
+		if not contributors:
+			await ctx.respond("⚠️ No contributors found for this game.", ephemeral=True)
+			return
+
+		# Include owner at the top
+		contributors.insert(0, (owner_credit_name["credit_name"], "Lead Designer"))
+
+		# Group contributors by role and sort alphabetically
+
+		role_dict = defaultdict(list)
+		for row in contributors:
+			# row is a tuple like (credit_name, role)
+			role_dict[row[1]].append(row[0])
+
+		# Sort roles and contributors alphabetically
+		output_lines = []
+		for role in sorted(role_dict):
+			output_lines.append(f"{role}")
+			for name in sorted(role_dict[role]):
+				output_lines.append(f"- {name}")
+			output_lines.append("")  # Blank line between roles
+
+		contributor_list = "\n".join(output_lines).strip()
+		await ctx.respond(
+			f"Contributors for **{game_info['name']}**:\n```markdown\n{contributor_list}\n```",
+			ephemeral=True
+		)
 
 
 
