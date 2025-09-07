@@ -89,17 +89,17 @@ class Contributors(commands.Cog):
 			return
 
 		# Include owner at the top
-		contributors.insert(0, (owner_credit_name["credit_name"], "Lead Designer"))
+		output_lines = ["Lead Game Designer"]
+		output_lines.append(f"- {owner_credit_name['credit_name']}")
+		output_lines.append("")  # Blank line after lead designer
 
 		# Group contributors by role and sort alphabetically
-
 		role_dict = defaultdict(list)
 		for row in contributors:
 			# row is a tuple like (credit_name, role)
 			role_dict[row[1]].append(row[0])
 
 		# Sort roles and contributors alphabetically
-		output_lines = []
 		for role in sorted(role_dict):
 			output_lines.append(f"{role}")
 			for name in sorted(role_dict[role]):
