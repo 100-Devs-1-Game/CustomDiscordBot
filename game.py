@@ -45,6 +45,21 @@ class Game(commands.Cog):
 		await ctx.send_modal(modal)
 
 
+	@group.command(description="Set the itch.io link for your game")
+	async def setitchiolink(self, ctx: discord.ApplicationContext, link: str):
+		game_info = Database.get_default_game_info() if Utils.is_test_environment() else Database.get_game_info(ctx.channel.id)
+		if not game_info:
+			await ctx.respond("No game associated with this channel.", ephemeral=True)
+			return
+
+		if not ctx.author.guild_permissions.manage_guild:
+			await ctx.respond("Only moderators can update the itch.io link.", ephemeral=True)
+			return
+
+		Database.update_field(Database.GAMES_DB, "games", game_info["id"], "itch_io_link", link)
+		await ctx.respond(f"Itch.io link updated.", ephemeral=True)
+	
+
 	@staticmethod
 	async def send_game_info(ctx, game_info):
 		description=game_info.get("description", "")
