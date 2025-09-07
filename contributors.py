@@ -8,7 +8,7 @@ from collections import defaultdict
 from game import Game
 
 
-CONTRIBUTION_TYPES = [ "Programmer", "2D Artist", "3D Artist", "Composer", "Sound Designer", "Writer", "Voice Actor"]
+CONTRIBUTION_TYPES = [ "Programmer", "2D Artist", "3D Artist", "Composer", "Sound Designer", "Writer", "Voice Actor", "Translator"]
 
 
 class Contributors(commands.Cog):
