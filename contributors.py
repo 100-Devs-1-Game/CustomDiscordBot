@@ -18,7 +18,7 @@ class Contributors(commands.Cog):
 
 	group = discord.SlashCommandGroup("contributors", "Contributor commands")	
 
-	@group.command(description="Register yourself as a contributor on our Server")
+	@group.command(description="Register yourself (once) as a contributor on our Server")
 	async def register(self, ctx: discord.ApplicationContext):
 		modal = ContributorRegisterModal(
 			discord_username=str(ctx.author.name),
