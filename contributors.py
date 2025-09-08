@@ -168,6 +168,35 @@ class Contributors(commands.Cog):
             ephemeral=True,
         )
 
+    @group.command(description="View your contributor profile information")
+    async def view(self, ctx: discord.ApplicationContext):
+        contributor = Database.fetch_one_as_dict(
+            Database.GAMES_DB,
+            "contributors",
+            "discord_username = ?",
+            (str(ctx.author.name),),
+        )
+
+        if not contributor:
+            await ctx.respond(
+                "⚠️ You are not registered as a contributor. Use `/contributors register` first.",
+                ephemeral=True,
+            )
+            return
+
+        embed = discord.Embed(
+            title=f"Name: {contributor['credit_name']}",
+            color=discord.Color.blurple(),
+        )
+        embed.add_field(
+            name="itch.io Link", value=contributor["itch_io_link"] or "", inline=False
+        )
+        embed.add_field(
+            name="Alternative Link", value=contributor["alt_link"] or "", inline=False
+        )
+
+        await ctx.respond(embed=embed, ephemeral=True)
+
 
 class ContributorRegisterModal(Modal):
     def __init__(self, discord_username: str, discord_display_name: str | None):
