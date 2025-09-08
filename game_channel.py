@@ -107,6 +107,8 @@ class GameChannel(commands.Cog):
 
 		await self.copy_messages(thread, new_channel)
 
+		await Utils.send_guide_link(new_channel, ctx.author)
+
 
 	async def copy_messages(self, thread, new_channel):
 		async for msg in thread.history(oldest_first=True):
