@@ -122,6 +122,10 @@ class GameChannel(commands.Cog):
 
         await Utils.send_guide_link(new_channel, ctx.author)
 
+        await new_channel.send(
+            f"Here's the automatically created Github Repository: {url}"
+        )
+
     async def copy_messages(self, thread, new_channel):
         async for msg in thread.history(oldest_first=True):
             if msg.author == self.bot.user:
