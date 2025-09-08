@@ -1,6 +1,23 @@
 import discord
 from discord.ext import commands
 
+COMMANDS= [
+	"/help ...",
+	"/assets listaccepted",
+	"/assets listrequests",
+	"/assets request",
+	"/contributors add",
+	"/contributors export",
+	"/contributors register",
+	"/create_game",
+	"/fun",
+	"/game info",
+	"/game setdescription",
+	"/game setitchiolink",
+	"/onboarding test",
+]
+
+
 
 class Help(commands.Cog):
 	def __init__(self, bot: discord.Bot):
@@ -42,4 +59,19 @@ class Help(commands.Cog):
 			title="100 Games in 100 Days Guide",
 			url= "https://docs.google.com/document/d/1BL1erhDZDM8XW_X2w3OuT16gAEbvKB8ZxjXn0cByAJ4/edit?usp=drive_link"
 		)	
+		await ctx.respond(embed=embed, ephemeral=True)
+
+
+	@group.command(description="List all bot commands")
+	async def botcommands(self, ctx: discord.ApplicationContext):
+		embed = discord.Embed(
+			title="Bot Commands",
+			description="Here is a list of available bot commands:",
+			color=discord.Color.purple()
+		)
+		embed.add_field(
+			name="Commands",
+			value="\n".join(COMMANDS),
+			inline=False
+		)
 		await ctx.respond(embed=embed, ephemeral=True)
