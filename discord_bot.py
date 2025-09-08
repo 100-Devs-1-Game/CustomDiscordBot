@@ -12,6 +12,7 @@ from game import Game
 from game_channel import GameChannel
 from help import Help
 from onboarding import Onboarding
+from onehundred import OneHundred
 from potato import Potato
 
 # load all the variables from the env file
@@ -105,5 +106,6 @@ if __name__ == "__main__":
     bot.add_cog(Game(bot))
     bot.add_cog(Contributors(bot))
     bot.add_cog(Assets(bot))
+    bot.add_cog(OneHundred(bot))
 
     bot.run(os.getenv("TOKEN"))  # run the bot with the token
