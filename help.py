@@ -63,12 +63,14 @@ class Help(commands.Cog):
 
 
 	@group.command(description="List all bot commands")
-	async def botcommands(self, ctx: discord.ApplicationContext):
+	async def commandlist(self, ctx: discord.ApplicationContext):
 		embed = discord.Embed(
 			title="Bot Commands",
-			description="Here is a list of available bot commands:",
+			description="Here is a list of available bot commands:\n"
+			"they all have their individual help texts",
 			color=discord.Color.purple()
 		)
+		
 		embed.add_field(
 			name="Commands",
 			value="\n".join(COMMANDS),
