@@ -83,11 +83,6 @@ async def on_interaction(interaction: discord.Interaction):
         traceback.print_exc()
 
 
-@guild_slash_command(name="hello", description="Say hello to the bot")
-async def hello(ctx: discord.ApplicationContext):
-    await ctx.respond("Hey!")
-
-
 @guild_slash_command(
     name="lintorder", description="Display the order our gdlinter expects"
 )
