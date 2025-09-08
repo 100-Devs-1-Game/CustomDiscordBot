@@ -143,6 +143,9 @@ class Contributors(commands.Cog):
 
     @group.command(description="Request a contributor in a specific role for your game")
     async def request(self, ctx: discord.ApplicationContext):
+        await ctx.respond("⚠️ Not implemented yet.", ephemeral=True)
+        return
+
         game_info = (
             Database.get_default_game_info()
             if Utils.is_test_environment()
