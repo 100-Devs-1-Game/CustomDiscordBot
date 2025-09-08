@@ -1,4 +1,5 @@
 import os
+import traceback
 from pathlib import Path
 
 import discord
@@ -51,6 +52,35 @@ def guild_slash_command(**kwargs):
 @bot.event
 async def on_ready():
     print(f"{bot.user} is ready and online!")
+
+
+@bot.listen
+async def on_interaction(interaction: discord.Interaction):
+    try:
+        user = interaction.user
+        guild = interaction.guild.name if interaction.guild else "DM"
+        channel = f"#{interaction.channel}" if interaction.channel else "N/A"
+
+        if interaction.type == discord.InteractionType.application_command:
+            print(
+                f"[SlashCommand] {user} used /{interaction.data['name']} in {guild} {channel}"
+            )
+        elif interaction.type == discord.InteractionType.component:
+            print(
+                f"[Component] {user} clicked: {interaction.data} in {guild} {channel}"
+            )
+        elif interaction.type == discord.InteractionType.modal_submit:
+            print(
+                f"[ModalSubmit] {user} submitted: {interaction.data} in {guild} {channel}"
+            )
+        else:
+            print(
+                f"[OtherInteraction] {user} triggered: {interaction.data} in {guild} {channel}"
+            )
+
+    except Exception as e:
+        print(f"[InteractionError] Exception while logging interaction: {e}")
+        traceback.print_exc()
 
 
 @guild_slash_command(name="hello", description="Say hello to the bot")
