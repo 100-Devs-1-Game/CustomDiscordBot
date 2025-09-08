@@ -9,6 +9,14 @@ from game import Game
 
 
 CONTRIBUTION_TYPES = [ "Programmer", "2D Artist", "3D Artist", "Composer", "Sound Designer", "Writer", "Voice Actor", "Translator"]
+PING_ROLES = { "Composer": "PingComposer",
+			   "Sound Designer": "PingSFX",
+			   "Writer": "PingWriter",
+			   "Voice Actor": "PingVoice",
+}
+
+CONTRIBUTOR_REQUEST_CHANNEL= 1414434518877601843 #1414479400250114058
+
 
 
 class Contributors(commands.Cog):
@@ -58,7 +66,7 @@ class Contributors(commands.Cog):
 		# show role dropdown
 		await ctx.respond(
 			f"Select contributors role for **member: {member.display_name}**:",
-            view=ContributionRoleView(game_info["id"], contributor["id"]),
+            view=ContributionRoleView(game_info, contributor["id"]),
             ephemeral=True
         )
 
@@ -113,6 +121,24 @@ class Contributors(commands.Cog):
 		)
 
 
+	@group.command(description="Request a contributor in a specific role for your game")
+	async def request(self, ctx: discord.ApplicationContext):
+		game_info = Database.get_default_game_info() if Utils.is_test_environment() else Database.get_game_info(ctx.channel.id)
+		if not game_info:
+			await ctx.respond("⚠️ No game found for this channel.", ephemeral=True)
+			return
+
+		if ctx.author.name != game_info["owner"]:
+			await ctx.respond("❌ Only the game owner can request contributors.", ephemeral=True)
+			return
+
+		# show role dropdown
+		await ctx.respond(
+			f"Request contributor role:",
+            view=ContributionRoleView(game_info),
+            ephemeral=True
+        )
+
 
 class ContributorRegisterModal(Modal):
 	def __init__(self, discord_username: str, discord_display_name: str | None):
@@ -166,8 +192,8 @@ class ContributorRegisterModal(Modal):
 
 
 class ContributionRoleSelect(discord.ui.Select):
-	def __init__(self, game_id: int, contributor_id: int):
-		self.game_id = game_id
+	def __init__(self, game_info: dict, contributor_id: int):
+		self.game_info = game_info
 		self.contributor_id = contributor_id
 
 		options = [ discord.SelectOption(label=role, value=role) for role in CONTRIBUTION_TYPES ]
@@ -177,11 +203,38 @@ class ContributionRoleSelect(discord.ui.Select):
 	async def callback(self, interaction: discord.Interaction):
 		chosen_role = self.values[0]
 
+		if self.contributor_id == -1:
+			# Requesting a contributor
+			channel= interaction.guild.get_channel(CONTRIBUTOR_REQUEST_CHANNEL)
+			if not channel:
+				await interaction.response.send_message(
+					"⚠️ Contributor request channel not found. Please contact an admin.",
+					ephemeral=True
+				)
+				return
+
+			channel_message = f"**[{chosen_role}]** needed for <#{self.game_info['channel_id']}>"
+
+			#mention all users with the role
+			role = PING_ROLES.get(chosen_role)
+			if role:
+				role_mention = discord.utils.get(interaction.guild.roles, name=role)
+				channel_message += f"\n@{role_mention.mention}"
+
+			await channel.send(channel_message, allowed_mentions=discord.AllowedMentions(roles=True))
+
+			await interaction.response.send_message(
+				f"✅ Requested contributor role: **{self.values[0]}**",
+				ephemeral=True
+			)
+			return
+		
+
 		# Insert link into relation table
 		Database.insert_into_db(
 			Database.GAMES_DB,
 			"game_contributors",
-			game_id=self.game_id,
+			game_id=self.game_info["id"],
 			contributor_id=self.contributor_id,
 			role=chosen_role
 		)
@@ -201,6 +254,6 @@ class ContributionRoleSelect(discord.ui.Select):
 
 
 class ContributionRoleView(discord.ui.View):
-	def __init__(self, game_id: int, contributor_id: int, timeout=60):
+	def __init__(self, game_info: dict, contributor_id: int= -1, timeout=60):
 		super().__init__(timeout=timeout)
-		self.add_item(ContributionRoleSelect(game_id, contributor_id))
+		self.add_item(ContributionRoleSelect(game_info, contributor_id))
