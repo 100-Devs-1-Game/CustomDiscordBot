@@ -1,259 +1,286 @@
+from collections import defaultdict
+
 import discord
 from discord.ext import commands
-from discord import Interaction
-from discord.ui import Modal, InputText
+from discord.ui import InputText, Modal
+
 from databases import Database
-from utils import Utils
-from collections import defaultdict
 from game import Game
+from utils import Utils
 
-
-CONTRIBUTION_TYPES = [ "Programmer", "2D Artist", "3D Artist", "Composer", "Sound Designer", "Writer", "Voice Actor", "Translator"]
-PING_ROLES = { "Composer": "PingComposer",
-			   "Sound Designer": "PingSFX",
-			   "Writer": "PingWriter",
-			   "Voice Actor": "PingVoice",
+CONTRIBUTION_TYPES = [
+    "Programmer",
+    "2D Artist",
+    "3D Artist",
+    "Composer",
+    "Sound Designer",
+    "Writer",
+    "Voice Actor",
+    "Translator",
+]
+PING_ROLES = {
+    "Composer": "PingComposer",
+    "Sound Designer": "PingSFX",
+    "Writer": "PingWriter",
+    "Voice Actor": "PingVoice",
 }
 
-CONTRIBUTOR_REQUEST_CHANNEL= 1414434518877601843 #1414479400250114058
-
+CONTRIBUTOR_REQUEST_CHANNEL = 1414434518877601843  # 1414479400250114058
 
 
 class Contributors(commands.Cog):
-	def __init__(self, bot: discord.Bot):
-		self.bot = bot
+    def __init__(self, bot: discord.Bot):
+        self.bot = bot
 
+    group = discord.SlashCommandGroup("contributors", "Contributor commands")
 
-	group = discord.SlashCommandGroup("contributors", "Contributor commands")	
+    @group.command(
+        description="Register yourself (once) as a contributor on our Server"
+    )
+    async def register(self, ctx: discord.ApplicationContext):
+        modal = ContributorRegisterModal(
+            discord_username=str(ctx.author.name),
+            discord_display_name=ctx.author.display_name,
+        )
+        await ctx.send_modal(modal)
 
-	@group.command(description="Register yourself (once) as a contributor on our Server")
-	async def register(self, ctx: discord.ApplicationContext):
-		modal = ContributorRegisterModal(
-			discord_username=str(ctx.author.name),
-			discord_display_name=ctx.author.display_name,
-		)
-		await ctx.send_modal(modal)
+    @group.command(description="Add a contributor to your game from your game channel")
+    async def add(self, ctx: discord.ApplicationContext, member: discord.Member):
+        game_info = (
+            Database.get_default_game_info()
+            if Utils.is_test_environment()
+            else Database.get_game_info(ctx.channel.id)
+        )
+        if not game_info:
+            await ctx.respond("⚠️ No game found for this channel.", ephemeral=True)
+            return
 
+        if ctx.author.name != game_info["owner"]:
+            await ctx.respond(
+                "❌ Only the game owner can add contributors.", ephemeral=True
+            )
+            return
 
-	@group.command(description="Add a contributor to your game from your game channel")
-	async def add(self, ctx: discord.ApplicationContext, member: discord.Member):
-		game_info = Database.get_default_game_info() if Utils.is_test_environment() else Database.get_game_info(ctx.channel.id)
-		if not game_info:
-			await ctx.respond("⚠️ No game found for this channel.", ephemeral=True)
-			return
-
-		if ctx.author.name != game_info["owner"]:
-			await ctx.respond("❌ Only the game owner can add contributors.", ephemeral=True)
-			return
-		
-		contributor = Database.fetch_one_as_dict(
-			Database.GAMES_DB,
-			"contributors",
-			"discord_username = ?",
-			(str(member.name),)
-		)
-
-		if not contributor:
-			ctx.channel.send(f"⚠️ {member.mention} please register as a contributor on our server ( /contributors register ).")
-
-			# not registered — tell owner how to get them registered
-			await ctx.respond(
-				f"{member.display_name} is not registered as a contributor.",
-				ephemeral=True
-			)
-			return
-
-		# show role dropdown
-		await ctx.respond(
-			f"Select contributors role for **member: {member.display_name}**:",
-            view=ContributionRoleView(game_info, contributor["id"]),
-            ephemeral=True
+        contributor = Database.fetch_one_as_dict(
+            Database.GAMES_DB,
+            "contributors",
+            "discord_username = ?",
+            (str(member.name),),
         )
 
+        if not contributor:
+            ctx.channel.send(
+                f"⚠️ {member.mention} please register as a contributor on our server ( /contributors register )."
+            )
 
-	@group.command(description="Export the list of contributors for the credits")
-	async def export(self, ctx: discord.ApplicationContext):
-		game_info = Database.get_default_game_info() if Utils.is_test_environment() else Database.get_game_info(ctx.channel.id)
-		if not game_info:
-			await ctx.respond("⚠️ No game found for this channel.", ephemeral=True)
-			return
+            # not registered — tell owner how to get them registered
+            await ctx.respond(
+                f"{member.display_name} is not registered as a contributor.",
+                ephemeral=True,
+            )
+            return
 
-		owner_credit_name = Database.fetch_one_as_dict(
-			Database.GAMES_DB,
-			"contributors",
-			"discord_username = ?",
-			(game_info["owner"],)
-		)
+        # show role dropdown
+        await ctx.respond(
+            f"Select contributors role for **member: {member.display_name}**:",
+            view=ContributionRoleView(game_info, contributor["id"]),
+            ephemeral=True,
+        )
 
-		if not owner_credit_name:
-			await ctx.respond("⚠️ Owner isn't registered as a contributor.", ephemeral=True)
-			return
+    @group.command(description="Export the list of contributors for the credits")
+    async def export(self, ctx: discord.ApplicationContext):
+        game_info = (
+            Database.get_default_game_info()
+            if Utils.is_test_environment()
+            else Database.get_game_info(ctx.channel.id)
+        )
+        if not game_info:
+            await ctx.respond("⚠️ No game found for this channel.", ephemeral=True)
+            return
 
+        owner_credit_name = Database.fetch_one_as_dict(
+            Database.GAMES_DB,
+            "contributors",
+            "discord_username = ?",
+            (game_info["owner"],),
+        )
 
-		contributors = Game.fetch_contributors(game_info, "credit_name")
+        if not owner_credit_name:
+            await ctx.respond(
+                "⚠️ Owner isn't registered as a contributor.", ephemeral=True
+            )
+            return
 
-		if not contributors:
-			await ctx.respond("⚠️ No contributors found for this game.", ephemeral=True)
-			return
+        contributors = Game.fetch_contributors(game_info, "credit_name")
 
-		# Include owner at the top
-		output_lines = ["Lead Game Designer"]
-		output_lines.append(f"- {owner_credit_name['credit_name']}")
-		output_lines.append("")  # Blank line after lead designer
+        if not contributors:
+            await ctx.respond("⚠️ No contributors found for this game.", ephemeral=True)
+            return
 
-		# Group contributors by role and sort alphabetically
-		role_dict = defaultdict(list)
-		for row in contributors:
-			# row is a tuple like (credit_name, role)
-			role_dict[row[1]].append(row[0])
+        # Include owner at the top
+        output_lines = ["Lead Game Designer"]
+        output_lines.append(f"- {owner_credit_name['credit_name']}")
+        output_lines.append("")  # Blank line after lead designer
 
-		# Sort roles and contributors alphabetically
-		for role in sorted(role_dict):
-			output_lines.append(f"{role}")
-			for name in sorted(role_dict[role]):
-				output_lines.append(f"- {name}")
-			output_lines.append("")  # Blank line between roles
+        # Group contributors by role and sort alphabetically
+        role_dict = defaultdict(list)
+        for row in contributors:
+            # row is a tuple like (credit_name, role)
+            role_dict[row[1]].append(row[0])
 
-		contributor_list = "\n".join(output_lines).strip()
-		await ctx.respond(
-			f"Contributors for **{game_info['name']}**:\n```markdown\n{contributor_list}\n```",
-			ephemeral=True
-		)
+        # Sort roles and contributors alphabetically
+        for role in sorted(role_dict):
+            output_lines.append(f"{role}")
+            for name in sorted(role_dict[role]):
+                output_lines.append(f"- {name}")
+            output_lines.append("")  # Blank line between roles
 
+        contributor_list = "\n".join(output_lines).strip()
+        await ctx.respond(
+            f"Contributors for **{game_info['name']}**:\n```markdown\n{contributor_list}\n```",
+            ephemeral=True,
+        )
 
-	@group.command(description="Request a contributor in a specific role for your game")
-	async def request(self, ctx: discord.ApplicationContext):
-		game_info = Database.get_default_game_info() if Utils.is_test_environment() else Database.get_game_info(ctx.channel.id)
-		if not game_info:
-			await ctx.respond("⚠️ No game found for this channel.", ephemeral=True)
-			return
+    @group.command(description="Request a contributor in a specific role for your game")
+    async def request(self, ctx: discord.ApplicationContext):
+        game_info = (
+            Database.get_default_game_info()
+            if Utils.is_test_environment()
+            else Database.get_game_info(ctx.channel.id)
+        )
+        if not game_info:
+            await ctx.respond("⚠️ No game found for this channel.", ephemeral=True)
+            return
 
-		if ctx.author.name != game_info["owner"]:
-			await ctx.respond("❌ Only the game owner can request contributors.", ephemeral=True)
-			return
+        if ctx.author.name != game_info["owner"]:
+            await ctx.respond(
+                "❌ Only the game owner can request contributors.", ephemeral=True
+            )
+            return
 
-		# show role dropdown
-		await ctx.respond(
-			f"Request contributor role:",
+        # show role dropdown
+        await ctx.respond(
+            "Request contributor role:",
             view=ContributionRoleView(game_info),
-            ephemeral=True
+            ephemeral=True,
         )
 
 
 class ContributorRegisterModal(Modal):
-	def __init__(self, discord_username: str, discord_display_name: str | None):
-		super().__init__(title="Register as Contributor")
-		self.discord_username = discord_username
-		self.discord_display_name = discord_display_name
+    def __init__(self, discord_username: str, discord_display_name: str | None):
+        super().__init__(title="Register as Contributor")
+        self.discord_username = discord_username
+        self.discord_display_name = discord_display_name
 
-		self.credit_name = InputText(
-			label="Credit Name",
-			placeholder="Name to display in credits",
-			required=True
-		)
-		self.itch_io_link = InputText(
-			label="itch.io Link",
-			placeholder="Optional: https://yourgame.itch.io/",
-			required=False
-		)
-		self.alt_link = InputText(
-			label="Alternative Link",
-			placeholder="Optional: Portfolio, GitHub, etc.",
-			required=False
-		)
+        self.credit_name = InputText(
+            label="Credit Name", placeholder="Name to display in credits", required=True
+        )
+        self.itch_io_link = InputText(
+            label="itch.io Link",
+            placeholder="Optional: https://yourgame.itch.io/",
+            required=False,
+        )
+        self.alt_link = InputText(
+            label="Alternative Link",
+            placeholder="Optional: Portfolio, GitHub, etc.",
+            required=False,
+        )
 
-		self.add_item(self.credit_name)
-		self.add_item(self.itch_io_link)
-		self.add_item(self.alt_link)
+        self.add_item(self.credit_name)
+        self.add_item(self.itch_io_link)
+        self.add_item(self.alt_link)
 
+    async def callback(self, interaction: discord.Interaction):
+        if Database.entry_exists(
+            Database.GAMES_DB, "contributors", "discord_username", self.discord_username
+        ):
+            await interaction.response.send_message(
+                "⚠️ You are already registered as a Contributor.", ephemeral=True
+            )
+            return
 
-	async def callback(self, interaction: discord.Interaction):
-		if Database.entry_exists(Database.GAMES_DB, "contributors", "discord_username", self.discord_username):
-			await interaction.response.send_message(
-				f"⚠️ You are already registered as a Contributor.",
-				ephemeral=True
-			)
-			return
+        # Insert new contributor
+        Database.register_contributor(
+            discord_username=self.discord_username,
+            discord_display_name=self.discord_display_name,
+            credit_name=self.credit_name.value,
+            itch_io_link=self.itch_io_link.value or None,
+            alt_link=self.alt_link.value or None,
+        )
 
-		# Insert new contributor
-		Database.register_contributor(
-			discord_username=self.discord_username,
-			discord_display_name=self.discord_display_name,
-			credit_name=self.credit_name.value,
-			itch_io_link=self.itch_io_link.value or None,
-			alt_link=self.alt_link.value or None,
-		)
-
-		await interaction.response.send_message(
-			f"✅ Registered as contributor: **{self.credit_name.value}**",
-			ephemeral=True
-		)
-
+        await interaction.response.send_message(
+            f"✅ Registered as contributor: **{self.credit_name.value}**",
+            ephemeral=True,
+        )
 
 
 class ContributionRoleSelect(discord.ui.Select):
-	def __init__(self, game_info: dict, contributor_id: int):
-		self.game_info = game_info
-		self.contributor_id = contributor_id
+    def __init__(self, game_info: dict, contributor_id: int):
+        self.game_info = game_info
+        self.contributor_id = contributor_id
 
-		options = [ discord.SelectOption(label=role, value=role) for role in CONTRIBUTION_TYPES ]
-		super().__init__(placeholder="Select contribution type...", min_values=1, max_values=1, options=options )
+        options = [
+            discord.SelectOption(label=role, value=role) for role in CONTRIBUTION_TYPES
+        ]
+        super().__init__(
+            placeholder="Select contribution type...",
+            min_values=1,
+            max_values=1,
+            options=options,
+        )
 
+    async def callback(self, interaction: discord.Interaction):
+        chosen_role = self.values[0]
 
-	async def callback(self, interaction: discord.Interaction):
-		chosen_role = self.values[0]
+        if self.contributor_id == -1:
+            # Requesting a contributor
+            channel = interaction.guild.get_channel(CONTRIBUTOR_REQUEST_CHANNEL)
+            if not channel:
+                await interaction.response.send_message(
+                    "⚠️ Contributor request channel not found. Please contact an admin.",
+                    ephemeral=True,
+                )
+                return
 
-		if self.contributor_id == -1:
-			# Requesting a contributor
-			channel= interaction.guild.get_channel(CONTRIBUTOR_REQUEST_CHANNEL)
-			if not channel:
-				await interaction.response.send_message(
-					"⚠️ Contributor request channel not found. Please contact an admin.",
-					ephemeral=True
-				)
-				return
+            channel_message = (
+                f"**[{chosen_role}]** needed for <#{self.game_info['channel_id']}>"
+            )
 
-			channel_message = f"**[{chosen_role}]** needed for <#{self.game_info['channel_id']}>"
+            # mention all users with the role
+            role = PING_ROLES.get(chosen_role)
+            if role:
+                role_mention = discord.utils.get(interaction.guild.roles, name=role)
+                channel_message += f"\n@{role_mention.mention}"
 
-			#mention all users with the role
-			role = PING_ROLES.get(chosen_role)
-			if role:
-				role_mention = discord.utils.get(interaction.guild.roles, name=role)
-				channel_message += f"\n@{role_mention.mention}"
+            await channel.send(
+                channel_message, allowed_mentions=discord.AllowedMentions(roles=True)
+            )
 
-			await channel.send(channel_message, allowed_mentions=discord.AllowedMentions(roles=True))
+            await interaction.response.send_message(
+                f"✅ Requested contributor role: **{self.values[0]}**", ephemeral=True
+            )
+            return
 
-			await interaction.response.send_message(
-				f"✅ Requested contributor role: **{self.values[0]}**",
-				ephemeral=True
-			)
-			return
-		
+        # Insert link into relation table
+        Database.insert_into_db(
+            Database.GAMES_DB,
+            "game_contributors",
+            game_id=self.game_info["id"],
+            contributor_id=self.contributor_id,
+            role=chosen_role,
+        )
 
-		# Insert link into relation table
-		Database.insert_into_db(
-			Database.GAMES_DB,
-			"game_contributors",
-			game_id=self.game_info["id"],
-			contributor_id=self.contributor_id,
-			role=chosen_role
-		)
+        contributor = Database.fetch_one_as_dict(
+            Database.GAMES_DB, "contributors", "id = ?", (self.contributor_id,)
+        )
 
-		contributor= Database.fetch_one_as_dict(
-			Database.GAMES_DB,
-			"contributors",
-			"id = ?",
-			(self.contributor_id,)
-		)
-
-		await interaction.response.send_message(
-			f"✅ Added contributor **{contributor['discord_display_name']}** with role: **{chosen_role}**",
-			#ephemeral=True
-		)
-
+        await interaction.response.send_message(
+            f"✅ Added contributor **{contributor['discord_display_name']}** with role: **{chosen_role}**",
+            # ephemeral=True
+        )
 
 
 class ContributionRoleView(discord.ui.View):
-	def __init__(self, game_info: dict, contributor_id: int= -1, timeout=60):
-		super().__init__(timeout=timeout)
-		self.add_item(ContributionRoleSelect(game_info, contributor_id))
+    def __init__(self, game_info: dict, contributor_id: int = -1, timeout=60):
+        super().__init__(timeout=timeout)
+        self.add_item(ContributionRoleSelect(game_info, contributor_id))

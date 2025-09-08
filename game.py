@@ -1,138 +1,158 @@
 import os
+
 import discord
-from discord.ext import commands
-from databases import Database
 from discord import Interaction
-from discord.ui import Modal, InputText
-from utils import Utils
+from discord.ext import commands
+from discord.ui import InputText, Modal
 from dotenv import load_dotenv
 
+from databases import Database
+from utils import Utils
 
 load_dotenv()
-GITHUB_URL_PREFIX= "https://github.com/100-Devs-1-Game/"
+GITHUB_URL_PREFIX = "https://github.com/100-Devs-1-Game/"
 TEST_CHANNEL_ID = int(os.getenv("TEST_CHANNEL_ID", "0"))
 
 
 class Game(commands.Cog):
-	def __init__(self, bot: discord.Bot):
-		self.bot = bot
+    def __init__(self, bot: discord.Bot):
+        self.bot = bot
 
-	group = discord.SlashCommandGroup("game", "Game channel commands")
+    group = discord.SlashCommandGroup("game", "Game channel commands")
 
-	@group.command(description="Show information about the game associated with this channel")
-	async def info(self, ctx: discord.ApplicationContext):
-		game_info = Database.get_default_game_info() if Utils.is_test_environment() else Database.get_game_info(ctx.channel.id)
-		if not game_info:
-			await ctx.respond("No game info found for this channel.", ephemeral=True)
-			return
+    @group.command(
+        description="Show information about the game associated with this channel"
+    )
+    async def info(self, ctx: discord.ApplicationContext):
+        game_info = (
+            Database.get_default_game_info()
+            if Utils.is_test_environment()
+            else Database.get_game_info(ctx.channel.id)
+        )
+        if not game_info:
+            await ctx.respond("No game info found for this channel.", ephemeral=True)
+            return
 
-		await Game.send_game_info(ctx, game_info)
+        await Game.send_game_info(ctx, game_info)
 
+    @group.command(description="Set or update the description for your game")
+    async def setdescription(self, ctx: discord.ApplicationContext):
+        game_info = (
+            Database.get_default_game_info()
+            if Utils.is_test_environment()
+            else Database.get_game_info(ctx.channel.id)
+        )
+        if not game_info:
+            await ctx.respond("No game associated with this channel.", ephemeral=True)
+            return
 
-	@group.command(description="Set or update the description for your game")
-	async def setdescription(self, ctx: discord.ApplicationContext):
-		game_info = Database.get_default_game_info() if Utils.is_test_environment() else Database.get_game_info(ctx.channel.id)
-		if not game_info:
-			await ctx.respond("No game associated with this channel.", ephemeral=True)
-			return
+        if ctx.author.name != game_info["owner"]:
+            await ctx.respond(
+                "Only the game owner can update the description.", ephemeral=True
+            )
+            return
 
-		if ctx.author.name != game_info["owner"]:
-			await ctx.respond("Only the game owner can update the description.", ephemeral=True)
-			return
+        current_desc = game_info.get("description", "")
+        modal = DescriptionModal(game_info["id"], current_desc)
+        await ctx.send_modal(modal)
 
-		current_desc = game_info.get("description", "")
-		modal = DescriptionModal(game_info["id"], current_desc)
-		await ctx.send_modal(modal)
+    @group.command(description="Set the itch.io link for your game")
+    async def setitchiolink(self, ctx: discord.ApplicationContext, link: str):
+        game_info = (
+            Database.get_default_game_info()
+            if Utils.is_test_environment()
+            else Database.get_game_info(ctx.channel.id)
+        )
+        if not game_info:
+            await ctx.respond("No game associated with this channel.", ephemeral=True)
+            return
 
+        if not ctx.author.guild_permissions.manage_guild:
+            await ctx.respond(
+                "Only moderators can update the itch.io link.", ephemeral=True
+            )
+            return
 
-	@group.command(description="Set the itch.io link for your game")
-	async def setitchiolink(self, ctx: discord.ApplicationContext, link: str):
-		game_info = Database.get_default_game_info() if Utils.is_test_environment() else Database.get_game_info(ctx.channel.id)
-		if not game_info:
-			await ctx.respond("No game associated with this channel.", ephemeral=True)
-			return
+        Database.update_field(
+            Database.GAMES_DB, "games", game_info["id"], "itch_io_link", link
+        )
+        await ctx.respond("Itch.io link updated.", ephemeral=True)
 
-		if not ctx.author.guild_permissions.manage_guild:
-			await ctx.respond("Only moderators can update the itch.io link.", ephemeral=True)
-			return
+    @staticmethod
+    async def send_game_info(ctx, game_info):
+        description = game_info.get("description", "")
+        if not description:
+            description = (
+                "No description provided. Use `/game setdescription` to add one."
+            )
 
-		Database.update_field(Database.GAMES_DB, "games", game_info["id"], "itch_io_link", link)
-		await ctx.respond(f"Itch.io link updated.", ephemeral=True)
-	
+        embed = discord.Embed(
+            title=game_info["name"],
+            description=description,
+            color=discord.Color.blurple(),
+        )
+        embed.add_field(
+            name="Repository",
+            value=f"[GitHub Link]({GITHUB_URL_PREFIX + game_info['repo_name']})",
+            inline=False,
+        )
+        embed.add_field(name="Owner", value=game_info["owner_display_name"])
 
-	@staticmethod
-	async def send_game_info(ctx, game_info):
-		description=game_info.get("description", "")
-		if not description:
-			description="No description provided. Use `/game setdescription` to add one."
-			
-		embed = discord.Embed(
-			title=game_info["name"],
-			description=description,
-			color=discord.Color.blurple()
-		)
-		embed.add_field(name="Repository", value=f"[GitHub Link]({GITHUB_URL_PREFIX + game_info['repo_name']})", inline=False)
-		embed.add_field(name="Owner", value=game_info["owner_display_name"])
+        rows = Game.fetch_contributors(game_info, "discord_display_name")
+        if rows:
+            contributors_str = "\n".join(f"**{name}** — {role}" for name, role in rows)
+        else:
+            contributors_str = "No contributors registered."
 
-		rows= Game.fetch_contributors(game_info, "discord_display_name")
-		if rows:
-			contributors_str = "\n".join(f"**{name}** — {role}" for name, role in rows)
-		else:
-			contributors_str = "No contributors registered."
+        embed.add_field(name="Contributors", value=contributors_str, inline=False)
 
-		embed.add_field(
-			name="Contributors",
-			value=contributors_str,
-			inline=False
-		)
+        await ctx.respond(embed=embed, ephemeral=True)
 
-		await ctx.respond(embed=embed, ephemeral=True)
+    @staticmethod
+    def get_channel_id(game_info: dict) -> int:
+        if Utils.is_test_environment():
+            return TEST_CHANNEL_ID
+        else:
+            return game_info["channel_id"]
 
-
-	@staticmethod
-	def get_channel_id(game_info: dict)-> int:
-		if Utils.is_test_environment():
-			return TEST_CHANNEL_ID	
-		else:
-			return game_info["channel_id"]
-
-
-	@staticmethod
-	def fetch_contributors(game_info: dict, name="credit_name"):
-		return Database.execute(Database.GAMES_DB, f"""
+    @staticmethod
+    def fetch_contributors(game_info: dict, name="credit_name"):
+        return Database.execute(
+            Database.GAMES_DB,
+            f"""
 			SELECT c.{name}, gc.role
 			FROM game_contributors gc
 			JOIN contributors c ON c.id = gc.contributor_id
 			WHERE gc.game_id = ?
-		""", (game_info["id"],))
-
+		""",
+            (game_info["id"],),
+        )
 
 
 class DescriptionModal(Modal):
-	def __init__(self, game_id: int, current_description: str = ""):
-		super().__init__(title="Update Game Description")
-		self.game_id = game_id
+    def __init__(self, game_id: int, current_description: str = ""):
+        super().__init__(title="Update Game Description")
+        self.game_id = game_id
 
-		self.description_input = InputText(
-			label="Game Description",
-			style=discord.InputTextStyle.paragraph,
-			placeholder="Enter a description for your game...",
-			required=True,
-			max_length=2000,
-			value=current_description  # pre-fill with existing description
-		)
+        self.description_input = InputText(
+            label="Game Description",
+            style=discord.InputTextStyle.paragraph,
+            placeholder="Enter a description for your game...",
+            required=True,
+            max_length=2000,
+            value=current_description,  # pre-fill with existing description
+        )
 
-		self.add_item(self.description_input)
+        self.add_item(self.description_input)
 
+    async def callback(self, interaction: Interaction):
+        print("Description Modal submitted")
+        new_description = self.description_input.value
 
-	async def callback(self, interaction: Interaction):
-		print("Description Modal submitted")
-		new_description = self.description_input.value
+        Database.update_field(
+            Database.GAMES_DB, "games", self.game_id, "description", new_description
+        )
 
-		Database.update_field(Database.GAMES_DB, "games", self.game_id, "description", new_description)
-		
-		await interaction.response.send_message(
-			f"Description updated for game ID {self.game_id}.", ephemeral=True
-		)
-
-
+        await interaction.response.send_message(
+            f"Description updated for game ID {self.game_id}.", ephemeral=True
+        )
