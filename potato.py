@@ -3,7 +3,18 @@ from discord.ext import commands
 
 
 class Potato(commands.Cog):
-    POTATOES: list[str] = ["baked", "potato", "tato"]
+    POTATOES: list[str] = [
+        "bake",
+        "baked",
+        "potat",
+        "potato",
+        "potatoes",
+        "potatos",
+        "potato's",
+        "tato",
+        "tatos",
+        "tato's",
+    ]
 
     def __init__(self, bot: discord.Bot):
         self.bot = bot
@@ -11,10 +22,5 @@ class Potato(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         for word in self.POTATOES:
-            if (
-                message.content.startswith(word + " ")
-                or message.content.endswith(" " + word)
-                or f" {word} " in message.content
-                or message.content == word
-            ):
+            if f"{word}" in message.content:
                 await message.add_reaction("🥔")
