@@ -1,4 +1,5 @@
 import os
+import sys
 import traceback
 from pathlib import Path
 
@@ -81,6 +82,8 @@ async def on_interaction(interaction: discord.Interaction):
     except Exception as e:
         print(f"[InteractionError] Exception while logging interaction: {e}")
         traceback.print_exc()
+
+    sys.stdout.flush()
 
 
 @guild_slash_command(
