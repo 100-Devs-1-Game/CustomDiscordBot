@@ -1,42 +1,17 @@
-import os
 import re
-from pathlib import Path
 
 import discord
 from discord import option
 from discord.ext import commands
-from dotenv import load_dotenv
-from github import Auth, Github
 
 from databases import Database
+from github_wrapper import GithubWrapper
 from utils import Utils
 
 FORUM_ID = 1411735698951639193
 CHANNEL_CATEGORY = 1411870610279366686
 # FORUM_ID = -1
 # CHANNEL_CATEGORY =
-
-
-# load all the variables from the env file
-load_dotenv()
-
-# GitHub App credentials
-GITHUB_APP_ID = os.getenv("GITHUB_APP_ID")  # GitHub App ID
-PRIVATE_KEY_PATH = Path(
-    "100devs-discord-bot.2025-08-26.private-key.pem"  # downloaded private key
-)
-GITHUB_INSTALLATION_ID = os.getenv(
-    "GITHUB_INSTALLATION_ID"
-)  # App installation ID for the repo/org
-
-assert GITHUB_APP_ID
-assert GITHUB_INSTALLATION_ID
-
-appauth = Auth.AppAuth(GITHUB_APP_ID, PRIVATE_KEY_PATH.read_text())
-installauth = appauth.get_installation_auth(int(GITHUB_INSTALLATION_ID))
-
-GITHUB = Github(auth=installauth)
-GITHUB_ORG = GITHUB.get_organization("100-Devs-1-Game")
 
 
 class GameChannel(commands.Cog):
@@ -70,7 +45,7 @@ class GameChannel(commands.Cog):
 
         # check if it exists
         existing = None
-        for repo in GITHUB_ORG.get_repos():
+        for repo in GithubWrapper.get_github_org().get_repos():
             if repo.name.lower() == repo_name_sanitized.lower():
                 existing = repo
                 break
@@ -85,8 +60,10 @@ class GameChannel(commands.Cog):
         else:
             url = ""
             if not Utils.is_test_environment():
-                repo = GITHUB_ORG.create_repo_from_template(
-                    repo=GITHUB.get_repo("100-Devs-1-Game/MinimalProjectTemplate"),
+                repo = GithubWrapper.get_github_org().create_repo_from_template(
+                    repo=GithubWrapper.get_github().get_repo(
+                        "100-Devs-1-Game/MinimalProjectTemplate"
+                    ),
                     name=repo_name_sanitized,
                     description=f"Repository for the game {game_name} - for 100 Games in 100 Days",
                     private=False,
