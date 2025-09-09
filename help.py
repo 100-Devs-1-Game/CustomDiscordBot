@@ -15,6 +15,7 @@ COMMANDS = [
     "/game info",
     "/game setdescription",
     "/game setitchiolink",
+    "/game build",
     "/onboarding test",
 ]
 
