@@ -73,8 +73,8 @@ class Contributors(commands.Cog):
         )
 
         if not contributor:
-            ctx.channel.send(
-                f"⚠️ {member.mention} please register as a contributor on our server ( /contributors register )."
+            await ctx.channel.send(
+                f"⚠️ {member.mention} please register as a contributor on our server ( `/contributors register` ) so you can be added."
             )
 
             # not registered — tell owner how to get them registered
