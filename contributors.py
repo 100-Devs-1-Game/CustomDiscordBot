@@ -290,7 +290,7 @@ class ContributionRoleSelect(discord.ui.Select):
             role = PING_ROLES.get(chosen_role)
             if role:
                 role_mention = discord.utils.get(interaction.guild.roles, name=role)
-                channel_message += f"\n@{role_mention.mention}"
+                channel_message += f"\n{role_mention.mention}"
 
             await channel.send(
                 channel_message, allowed_mentions=discord.AllowedMentions(roles=True)
