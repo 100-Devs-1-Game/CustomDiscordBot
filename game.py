@@ -99,7 +99,7 @@ class Game(commands.Cog):
             return
 
         g = GithubWrapper.get_github()
-        repo_url = GithubWrapper.GITHUB_URL_PREFIX + game_info["repo_name"]
+        repo_url = "100devs/" + game_info["repo_name"]
         print("Fetching repo:", repo_url)
         repo = g.get_repo(repo_url)
 
