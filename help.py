@@ -9,6 +9,7 @@ COMMANDS = [
     "/contributors add",
     "/contributors export",
     "/contributors register",
+    "/contributors request",
     "/create_game",
     "/fun",
     "/game info",

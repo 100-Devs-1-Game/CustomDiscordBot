@@ -25,7 +25,11 @@ PING_ROLES = {
     "Voice Actor": "PingVoice",
 }
 
-CONTRIBUTOR_REQUEST_CHANNEL = 1414434518877601843  # 1414479400250114058
+SUPPORTED_REQUEST_ROLES = [
+    "Composer",
+]
+
+CONTRIBUTOR_REQUEST_CHANNEL = 1414434518877601843  # Test Server: 1414479400250114058
 
 
 class Contributors(commands.Cog):
@@ -143,9 +147,6 @@ class Contributors(commands.Cog):
 
     @group.command(description="Request a contributor in a specific role for your game")
     async def request(self, ctx: discord.ApplicationContext):
-        await ctx.respond("⚠️ Not implemented yet.", ephemeral=True)
-        return
-
         game_info = (
             Database.get_default_game_info()
             if Utils.is_test_environment()
@@ -274,8 +275,15 @@ class ContributionRoleSelect(discord.ui.Select):
                 )
                 return
 
+            if chosen_role not in SUPPORTED_REQUEST_ROLES:
+                await interaction.response.send_message(
+                    f"⚠️ Role **{chosen_role}** cannot be requested at this time.",
+                    ephemeral=True,
+                )
+                return
+
             channel_message = (
-                f"**[{chosen_role}]** needed for <#{self.game_info['channel_id']}>"
+                f"**[{chosen_role}]** needed in <#{self.game_info['channel_id']}>"
             )
 
             # mention all users with the role
@@ -289,7 +297,9 @@ class ContributionRoleSelect(discord.ui.Select):
             )
 
             await interaction.response.send_message(
-                f"✅ Requested contributor role: **{self.values[0]}**", ephemeral=True
+                f"✅ Requested contributor role: **{self.values[0]}**\n"
+                "The request has been posted in <#{CONTRIBUTOR_REQUEST_CHANNEL}> you can mark it as done ✅ once you found someone.",
+                ephemeral=True,
             )
             return
 
