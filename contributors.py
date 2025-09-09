@@ -198,6 +198,32 @@ class Contributors(commands.Cog):
 
         await ctx.respond(embed=embed, ephemeral=True)
 
+    @group.command(description="Update your itch.io link in your contributor profile")
+    async def updateitchiolink(self, ctx: discord.ApplicationContext, link: str):
+        contributor = Database.fetch_one_as_dict(
+            Database.GAMES_DB,
+            "contributors",
+            "discord_username = ?",
+            (str(ctx.author.name),),
+        )
+
+        if not contributor:
+            await ctx.respond(
+                "⚠️ You are not registered as a contributor. Use `/contributors register` first.",
+                ephemeral=True,
+            )
+            return
+
+        Database.update_field(
+            Database.GAMES_DB,
+            "contributors",
+            contributor["id"],
+            "itch_io_link",
+            link,
+        )
+
+        await ctx.respond("✅ Updated your itch.io link.", ephemeral=True)
+
 
 class ContributorRegisterModal(Modal):
     def __init__(self, discord_username: str, discord_display_name: str | None):
