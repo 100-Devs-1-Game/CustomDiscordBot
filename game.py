@@ -178,6 +178,55 @@ class Game(commands.Cog):
 
         await ctx.respond(f"✅ Invite sent to {owner.display_name}", ephemeral=True)
 
+    @group.command(description="Get the itch.io link of the owner of this game")
+    async def getowneritchiolink(self, ctx: discord.ApplicationContext, link: str):
+        game_info = (
+            Database.get_default_game_info()
+            if Utils.is_test_environment()
+            else Database.get_game_info(ctx.channel.id)
+        )
+
+        if not game_info:
+            await ctx.respond("⚠️ No game found for this channel.", ephemeral=True)
+            return
+
+        owner = Utils.get_member_by_name(ctx.guild, game_info["owner"])
+
+        contributor = Database.fetch_one_as_dict(
+            Database.GAMES_DB,
+            "contributors",
+            "discord_username = ?",
+            (owner.name,),
+        )
+
+        if not contributor:
+            await ctx.channel.send(
+                f"⚠️ {owner.mention} please register as a contributor on our server ( `/contributors register` )."
+            )
+
+            await ctx.respond(
+                f"⚠️ No contributor info found for {owner.display_name}.",
+                ephemeral=True,
+            )
+            return
+
+        owner_itchio_link = contributor.get("itch_io_link", "")
+
+        if not owner_itchio_link:
+            await ctx.channel.send(
+                f"⚠️ {owner.mention} please add a link to your itch.io account ( `/contributors updateitchiolink` ) so you can be made an admin on your games page."
+            )
+            await ctx.respond(
+                f"⚠️ No itch.io link found for {owner.display_name}.",
+                ephemeral=True,
+            )
+            return
+
+        await ctx.respond(
+            f"✅ {owner.display_name}'s itch.io link: `{owner_itchio_link}`",
+            ephemeral=True,
+        )
+
     @staticmethod
     async def send_game_info(ctx, game_info):
         description = game_info.get("description", "")
