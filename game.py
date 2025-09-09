@@ -99,7 +99,13 @@ class Game(commands.Cog):
             return
 
         g = GithubWrapper.get_github()
-        repo = g.get_repo(GithubWrapper.GITHUB_URL_PREFIX + game_info["repo_name"])
+        repo_url = GithubWrapper.GITHUB_URL_PREFIX + game_info["repo_name"]
+        print("Fetching repo:", repo_url)
+        repo = g.get_repo(repo_url)
+
+        if not repo:
+            await ctx.respond("Could not find the repository.", ephemeral=True)
+            return
 
         sha = repo.get_branch("main").commit.sha
 
