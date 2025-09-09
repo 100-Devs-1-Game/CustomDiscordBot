@@ -179,7 +179,7 @@ class Game(commands.Cog):
         await ctx.respond(f"✅ Invite sent to {owner.display_name}", ephemeral=True)
 
     @group.command(description="Get the itch.io link of the owner of this game")
-    async def getowneritchiolink(self, ctx: discord.ApplicationContext, link: str):
+    async def getowneritchiolink(self, ctx: discord.ApplicationContext):
         game_info = (
             Database.get_default_game_info()
             if Utils.is_test_environment()
