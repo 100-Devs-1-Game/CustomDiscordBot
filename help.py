@@ -14,7 +14,8 @@ COMMANDS = [
     "/fun",
     "/game info",
     "/game setdescription",
-    "/game setitchiolink",
+    # "/game setitchiolink",
+    # "/game makeitchioadmin",
     "/game build",
     "/onboarding test",
 ]
