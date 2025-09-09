@@ -190,7 +190,7 @@ class Game(commands.Cog):
             await ctx.respond("⚠️ No game found for this channel.", ephemeral=True)
             return
 
-        owner = Utils.get_member_by_name(ctx.guild, game_info["owner"])
+        owner = ctx.guild.get_member_named(game_info["owner"])
 
         contributor = Database.fetch_one_as_dict(
             Database.GAMES_DB,
