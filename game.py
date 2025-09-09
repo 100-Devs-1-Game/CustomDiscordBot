@@ -1,4 +1,5 @@
 import os
+from datetime import datetime, timezone
 
 import discord
 from discord import Interaction
@@ -7,10 +8,10 @@ from discord.ui import InputText, Modal
 from dotenv import load_dotenv
 
 from databases import Database
+from github_wrapper import GithubWrapper
 from utils import Utils
 
 load_dotenv()
-GITHUB_URL_PREFIX = "https://github.com/100-Devs-1-Game/"
 TEST_CHANNEL_ID = int(os.getenv("TEST_CHANNEL_ID", "0"))
 
 
@@ -78,6 +79,59 @@ class Game(commands.Cog):
         )
         await ctx.respond("Itch.io link updated.", ephemeral=True)
 
+    @group.command(
+        description="Builds executables and deploys the HTML export to itch.io"
+    )
+    async def build(self, ctx: discord.ApplicationContext):
+        game_info = (
+            Database.get_default_game_info()
+            if Utils.is_test_environment()
+            else Database.get_game_info(ctx.channel.id)
+        )
+        if not game_info:
+            await ctx.respond("No game associated with this channel.", ephemeral=True)
+            return
+
+        if ctx.author.name != game_info["owner"]:
+            await ctx.respond(
+                "Only the game owner can trigger a build.", ephemeral=True
+            )
+            return
+
+        g = GithubWrapper.get_github()
+        repo = g.get_repo(GithubWrapper.GITHUB_URL_PREFIX + game_info["repo_name"])
+
+        sha = repo.get_branch("main").commit.sha
+
+        # base tag = YYYY.MM.DD
+        today = datetime.now(timezone.utc).strftime("%Y.%m.%d")
+        base_tag = f"v{today}"
+
+        # fetch existing tags
+        tags = [t.name for t in repo.get_tags()]
+
+        # ensure uniqueness for today
+        matches = [t for t in tags if t.startswith(base_tag)]
+        if not matches:
+            new_tag = base_tag
+        else:
+            counters = []
+            for m in matches:
+                parts = m.split("-")
+                if len(parts) > 1 and parts[1].isdigit():
+                    counters.append(int(parts[1]))
+            next_counter = max(counters, default=0) + 1
+            new_tag = f"{base_tag}-{next_counter}"
+
+        # create tag object + ref
+        tag = repo.create_git_tag(
+            tag=new_tag, message=f"Release {new_tag}", object=sha, type="commit"
+        )
+        repo.create_git_ref(ref=f"refs/tags/{new_tag}", sha=tag.sha)
+
+        print(f"{repo.url} Created tag: {new_tag}")
+        await ctx.respond(f"Building new release for {repo.url}", ephemeral=True)
+
     @staticmethod
     async def send_game_info(ctx, game_info):
         description = game_info.get("description", "")
@@ -93,7 +147,7 @@ class Game(commands.Cog):
         )
         embed.add_field(
             name="Repository",
-            value=f"[GitHub Link]({GITHUB_URL_PREFIX + game_info['repo_name']})",
+            value=f"[GitHub Link]({GithubWrapper.GITHUB_URL_PREFIX + game_info['repo_name']})",
             inline=False,
         )
         embed.add_field(name="Owner", value=game_info["owner_display_name"])
