@@ -141,6 +141,43 @@ class Game(commands.Cog):
 
         print(f"{repo.url} Created tag: {new_tag}")
 
+    @group.command(
+        description="Make the owner of this game an itchio admin for their page"
+    )
+    async def makeitchioadmin(self, ctx: discord.ApplicationContext, link: str):
+        if not Utils.is_admin(ctx.author):
+            await ctx.respond("❌ You do not have permission to use this command.")
+            return
+
+        game_info = (
+            Database.get_default_game_info()
+            if Utils.is_test_environment()
+            else Database.get_game_info(ctx.channel.id)
+        )
+
+        if not game_info:
+            await ctx.respond("⚠️ No game found for this channel.", ephemeral=True)
+            return
+
+        owner = Utils.get_member_by_name(ctx.guild, game_info["owner"])
+        # direct message the owner with the link
+        if owner:
+            try:
+                await owner.send(
+                    f"Hello {owner.display_name},\n\n"
+                    f"You have been made an admin for the itch.io page of your game '{game_info['name']}'.\n"
+                    f"Please visit the following link to manage your game's page:\n{link}\n\n"
+                    "Best regards,\nThe Godot Collaborative Game Jam Team"
+                )
+            except discord.Forbidden:
+                await ctx.respond(
+                    f"⚠️ Could not send DM to {owner.display_name}. They might have DMs disabled.",
+                    ephemeral=True,
+                )
+                return
+
+        await ctx.respond(f"✅ Invite sent to {owner.display_name}", ephemeral=True)
+
     @staticmethod
     async def send_game_info(ctx, game_info):
         description = game_info.get("description", "")
