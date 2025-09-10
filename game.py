@@ -214,7 +214,7 @@ class Game(commands.Cog):
 
         if not owner_itchio_link:
             await ctx.channel.send(
-                f"⚠️ {owner.mention} please add a link to your itch.io account ( `/contributors updateitchiolink` ) so you can be made an admin on your games page."
+                f"⚠️ {owner.mention} please add a link to your itch.io account ( `/contributors updateitchiolink` ) so you can be made an admin on your games page.\nYou can react with ✅ to this message when you are done."
             )
             await ctx.respond(
                 f"⚠️ No itch.io link found for {owner.display_name}.",
