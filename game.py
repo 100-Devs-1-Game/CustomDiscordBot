@@ -145,7 +145,7 @@ class Game(commands.Cog):
         description="Make the owner of this game an itchio admin for their page"
     )
     async def makeitchioadmin(self, ctx: discord.ApplicationContext, link: str):
-        if not Utils.is_admin(ctx.author):
+        if not ctx.author.guild_permissions.manage_guild:
             await ctx.respond("❌ You do not have permission to use this command.")
             return
 
