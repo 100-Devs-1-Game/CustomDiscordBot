@@ -13,6 +13,7 @@ from utils import Utils
 
 load_dotenv()
 TEST_CHANNEL_ID = int(os.getenv("TEST_CHANNEL_ID", "0"))
+ITCHIO_REQUEST_CHANNEL_ID = 1415533889891598336
 
 
 class Game(commands.Cog):
@@ -228,6 +229,65 @@ class Game(commands.Cog):
             ephemeral=True,
         )
 
+    @group.command(
+        description="Request to get admin ( and contributor ) access to the itch.io page of this game"
+    )
+    async def requestitchio(self, ctx: discord.ApplicationContext):
+        game_info = (
+            Database.get_default_game_info()
+            if Utils.is_test_environment()
+            else Database.get_game_info(ctx.channel.id)
+        )
+        if not game_info:
+            await ctx.respond("No game associated with this channel.", ephemeral=True)
+            return
+
+        if ctx.author.name != game_info["owner"] and not Game.is_contributor(
+            ctx, game_info
+        ):
+            await ctx.respond(
+                "Only the game owner or a contributor can request access.",
+                ephemeral=True,
+            )
+            return
+
+        itchio_account = Database.fetch_one_as_dict(
+            Database.GAMES_DB,
+            "contributors",
+            "discord_username = ?",
+            (ctx.author.name,),
+        ).get("itch_io_link", "")
+
+        if not itchio_account:
+            await ctx.respond(
+                "Please set your itch.io link first using `/contributors updateitchiolink`.",
+                ephemeral=True,
+            )
+            return
+
+        request_channel = ctx.guild.get_channel(ITCHIO_REQUEST_CHANNEL_ID)
+        if not request_channel:
+            await ctx.respond("Request channel not found.", ephemeral=True)
+            return
+
+        itch_io_link = game_info.get("itch_io_link", "")
+
+        if not itch_io_link:
+            await request_channel.send(
+                f"⚠️ The game '{game_info['name']}' does not have an itch.io link set. Please set it using `/game setitchiolink`."
+            )
+
+        await request_channel.send(
+            f"User {ctx.author.mention} has requested admin access to the itch.io page for the game '{game_info['name']}'.\n"
+            f"Game Owner: {game_info['owner_display_name']}\n"
+            f"Itch.io Page: {itch_io_link}\n"
+            f"Users itch.io link: {itchio_account}\n"
+        )
+
+        await ctx.respond(
+            f"✅ Request sent to {request_channel.mention}.", ephemeral=True
+        )
+
     @staticmethod
     async def send_game_info(ctx, game_info):
         description = game_info.get("description", "")
@@ -284,6 +344,25 @@ class Game(commands.Cog):
 		""",
             (game_info["id"],),
         )
+
+    @staticmethod
+    def is_contributor(ctx: discord.ApplicationContext, game_info: dict) -> bool:
+        contributor = Database.fetch_one_as_dict(
+            Database.GAMES_DB,
+            "contributors",
+            "discord_username = ?",
+            (ctx.author.name,),
+        )
+        if not contributor:
+            return False
+
+        role = Database.fetch_one_as_dict(
+            Database.GAMES_DB,
+            "game_contributors",
+            "game_id = ? AND contributor_id = ?",
+            (game_info["id"], contributor["id"]),
+        )
+        return role is not None
 
 
 class DescriptionModal(Modal):
