@@ -280,8 +280,9 @@ class Game(commands.Cog):
         await request_channel.send(
             f"User {ctx.author.mention} has requested admin access to the itch.io page for the game '{game_info['name']}'.\n"
             f"Game Owner: {game_info['owner_display_name']}\n"
-            f"Itch.io Page: {itch_io_link}\n"
-            f"Users itch.io link: {itchio_account}\n"
+            f"Itch.io Page: <{itch_io_link}>\n"
+            f"Users itch.io link: <{itchio_account}>\n",
+            allowed_mentions=discord.AllowedMentions.none(),
         )
 
         await ctx.respond(
