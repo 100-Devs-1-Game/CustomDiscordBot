@@ -1,6 +1,8 @@
 import discord
 from discord.ext import commands
 
+from onboarding import Onboarding
+
 COMMANDS = [
     "/help ...",
     "/assets listaccepted",
@@ -14,8 +16,9 @@ COMMANDS = [
     "/fun",
     "/game info",
     "/game setdescription",
+    "/game requestitchio",
     # "/game setitchiolink",
-    # "/game makeitchioadmin",
+    # "/contributors makeitchioadmin",
     "/game build",
     "/onboarding test",
 ]
@@ -26,6 +29,12 @@ class Help(commands.Cog):
         self.bot = bot
 
     group = discord.SlashCommandGroup("help", "Help commands")
+
+    @group.command(description="Overview of the Discord server")
+    async def overview(self, ctx: discord.ApplicationContext):
+        await ctx.respond(
+            embed=Onboarding.build_onboarding_embed(ctx.guild), ephemeral=True
+        )
 
     @group.command(description="Show information about the current channel")
     async def channel(self, ctx: discord.ApplicationContext):

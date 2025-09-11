@@ -27,7 +27,8 @@ class Onboarding(commands.Cog):
     def __init__(self, bot: discord.Bot):
         self.bot = bot
 
-    def build_onboarding_embed(self, guild: discord.Guild) -> discord.Embed:
+    @staticmethod
+    def build_onboarding_embed(guild: discord.Guild) -> discord.Embed:
         embed = discord.Embed(
             title=GREETING_MESSAGE,
             description=COMMUNITY_DESCRIPTION,
@@ -57,7 +58,7 @@ class Onboarding(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
-        embed = self.build_onboarding_embed(member.guild)
+        embed = Onboarding.build_onboarding_embed(member.guild)
         try:
             await member.send(embed=embed)
         except discord.Forbidden:
@@ -68,5 +69,5 @@ class Onboarding(commands.Cog):
     @group.command(name="test", description="Test the onboarding message")
     async def test(self, ctx: discord.ApplicationContext):
         """Test the onboarding message."""
-        embed = self.build_onboarding_embed(ctx.guild)
+        embed = Onboarding.build_onboarding_embed(ctx.guild)
         await ctx.respond(embed=embed, ephemeral=True)

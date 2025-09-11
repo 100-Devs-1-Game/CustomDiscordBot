@@ -142,7 +142,6 @@ class Game(commands.Cog):
             f"Building new release for {repo.html_url}", ephemeral=True
         )
 
-
     @group.command(description="Get the itch.io link of the owner of this game")
     async def getowneritchiolink(self, ctx: discord.ApplicationContext):
         game_info = (
