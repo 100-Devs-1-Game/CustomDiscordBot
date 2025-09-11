@@ -248,6 +248,13 @@ class Game(commands.Cog):
         )
         embed.add_field(name="Owner", value=game_info["owner_display_name"])
 
+        if game_info.get("itch_io_link"):
+            embed.add_field(
+                name="Itch.io Link",
+                value=f"[Itch.io Page]({game_info['itch_io_link']})",
+                inline=False,
+            )
+
         rows = Game.fetch_contributors(game_info, "discord_display_name")
         if rows:
             contributors_str = "\n".join(f"**{name}** — {role}" for name, role in rows)
@@ -255,13 +262,6 @@ class Game(commands.Cog):
             contributors_str = "No contributors registered."
 
         embed.add_field(name="Contributors", value=contributors_str, inline=False)
-
-        if game_info.get("itch_io_link"):
-            embed.add_field(
-                name="itch.io Link",
-                value=f"[Link]({game_info['itch_io_link']})",
-                inline=False,
-            )
 
         await ctx.respond(embed=embed, ephemeral=True)
 
