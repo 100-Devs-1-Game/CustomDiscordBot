@@ -213,12 +213,21 @@ class Game(commands.Cog):
             )
             return
 
-        itchio_account = Database.fetch_one_as_dict(
+        contributor = Database.fetch_one_as_dict(
             Database.GAMES_DB,
             "contributors",
             "discord_username = ?",
             (ctx.author.name,),
-        ).get("itch_io_link", "")
+        )
+
+        if not contributor:
+            await ctx.respond(
+                "Please register as a contributor first using `/contributors register`.",
+                ephemeral=True,
+            )
+            return
+
+        itchio_account = contributor.get("itch_io_link", "")
 
         if not itchio_account:
             await ctx.respond(
