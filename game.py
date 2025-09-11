@@ -137,7 +137,9 @@ class Game(commands.Cog):
         )
         repo.create_git_ref(ref=f"refs/tags/{new_tag}", sha=tag.sha)
 
-        await ctx.followup.send(f"Building new release for {repo.url}", ephemeral=True)
+        await ctx.followup.send(
+            f"Building new release for {repo.html_url}", ephemeral=True
+        )
 
     @group.command(
         description="Make the owner of this game an itchio admin for their page"
