@@ -224,6 +224,32 @@ class Contributors(commands.Cog):
 
         await ctx.respond("✅ Updated your itch.io link.", ephemeral=True)
 
+    @group.command(
+        description="Make user the admin of an itch.io page via an invite link"
+    )
+    async def makeitchioadmin(self, ctx: discord.ApplicationContext, user: discord.User, link: str):
+        if not ctx.author.guild_permissions.manage_guild:
+            await ctx.respond("❌ You do not have permission to use this command.")
+            return
+
+            try:
+                await user.send(
+                    f"Hello {user.display_name},\n\n"
+                    f"You have been made an admin for the itch.io page of a game.\n"
+                    f"Please visit the following link to manage your game's page:\n{link}\n"
+                    "Best regards,\n**The Godot Collaborative Game Jam team**"
+                )
+            except discord.Forbidden:
+                await ctx.respond(
+                    f"⚠️ Could not send DM to {user.display_name}. They might have DMs disabled.",
+                    ephemeral=True,
+                )
+                return
+
+        await ctx.respond(f"✅ Invite sent to {user.display_name}")
+
+
+
 
 class ContributorRegisterModal(Modal):
     def __init__(self, discord_username: str, discord_display_name: str | None):
