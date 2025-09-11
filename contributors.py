@@ -23,10 +23,13 @@ PING_ROLES = {
     "Sound Designer": "PingSFX",
     "Writer": "PingWriter",
     "Voice Actor": "PingVoice",
+    "Programmer": "PingCoder",
 }
 
 SUPPORTED_REQUEST_ROLES = [
     "Composer",
+    "Programmer",
+    "Voice Actor",
 ]
 
 CONTRIBUTOR_REQUEST_CHANNEL = 1414434518877601843  # Test Server: 1414479400250114058
@@ -253,7 +256,9 @@ class Contributors(commands.Cog):
     @group.command(
         description="Make user the admin of an itch.io page via an invite link"
     )
-    async def makeitchioadmin(self, ctx: discord.ApplicationContext, user: discord.User, link: str):
+    async def makeitchioadmin(
+        self, ctx: discord.ApplicationContext, user: discord.User, link: str
+    ):
         if not ctx.author.guild_permissions.manage_guild:
             await ctx.respond("❌ You do not have permission to use this command.")
             return
@@ -273,8 +278,6 @@ class Contributors(commands.Cog):
                 return
 
         await ctx.respond(f"✅ Invite sent to {user.display_name}")
-
-
 
 
 class ContributorRegisterModal(Modal):
