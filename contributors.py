@@ -198,6 +198,32 @@ class Contributors(commands.Cog):
 
         await ctx.respond(embed=embed, ephemeral=True)
 
+    @group.command(description="Update your credit name in your contributor profile")
+    async def updatecreditname(self, ctx: discord.ApplicationContext, name: str):
+        contributor = Database.fetch_one_as_dict(
+            Database.GAMES_DB,
+            "contributors",
+            "discord_username = ?",
+            (str(ctx.author.name),),
+        )
+
+        if not contributor:
+            await ctx.respond(
+                "⚠️ You are not registered as a contributor. Use `/contributors register` first.",
+                ephemeral=True,
+            )
+            return
+
+        Database.update_field(
+            Database.GAMES_DB,
+            "contributors",
+            contributor["id"],
+            "credit_name",
+            name,
+        )
+
+        await ctx.respond("✅ Updated your credit name.", ephemeral=True)
+
     @group.command(description="Update your itch.io link in your contributor profile")
     async def updateitchiolink(self, ctx: discord.ApplicationContext, link: str):
         contributor = Database.fetch_one_as_dict(
