@@ -98,7 +98,7 @@ class Game(commands.Cog):
             )
             return
 
-        # await ctx.defer(ephemeral=True)  # immediately tells Discord "working on it"
+        await ctx.defer(ephemeral=True)  # immediately tells Discord "working on it"
 
         g = GithubWrapper.get_github()
         repo_url = "100-Devs-1-Game/" + game_info["repo_name"]
@@ -106,10 +106,8 @@ class Game(commands.Cog):
         repo = g.get_repo(repo_url)
 
         if not repo:
-            await ctx.respond("Could not find the repository.", ephemeral=True)
+            await ctx.followup.send("Could not find the repository.", ephemeral=True)
             return
-
-        await ctx.respond(f"Building new release for {repo.url}", ephemeral=True)
 
         sha = repo.get_branch("main").commit.sha
 
@@ -139,7 +137,7 @@ class Game(commands.Cog):
         )
         repo.create_git_ref(ref=f"refs/tags/{new_tag}", sha=tag.sha)
 
-        print(f"{repo.url} Created tag: {new_tag}")
+        await ctx.followup.send(f"Building new release for {repo.url}", ephemeral=True)
 
     @group.command(
         description="Make the owner of this game an itchio admin for their page"
