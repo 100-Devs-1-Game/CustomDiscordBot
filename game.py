@@ -248,7 +248,8 @@ class Game(commands.Cog):
         )
 
         await ctx.respond(
-            f"✅ Request sent to {request_channel.mention}.", ephemeral=True
+            "✅ Request sent. It has to be processed by a moderator and you'll receive a DM once it's done.",
+            ephemeral=True,
         )
 
     @staticmethod
