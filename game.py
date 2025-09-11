@@ -256,6 +256,13 @@ class Game(commands.Cog):
 
         embed.add_field(name="Contributors", value=contributors_str, inline=False)
 
+        if game_info.get("itch_io_link"):
+            embed.add_field(
+                name="itch.io Link",
+                value=f"[Link]({game_info['itch_io_link']})",
+                inline=False,
+            )
+
         await ctx.respond(embed=embed, ephemeral=True)
 
     @staticmethod
