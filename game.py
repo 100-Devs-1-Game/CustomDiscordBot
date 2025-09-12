@@ -260,7 +260,8 @@ class Game(commands.Cog):
         )
 
         await ctx.respond(
-            "✅ Request sent. It has to be processed by a moderator and you'll receive a DM once it's done.",
+            "✅ Request sent. It has to be processed by a moderator and you'll receive a DM once it's done."
+            " On the itch.io page click 'Edit Game', then choose 'More'->'Admins' and check 'Display as contributor' next to your name to make the game part of your portfolio.",
             ephemeral=True,
         )
 
