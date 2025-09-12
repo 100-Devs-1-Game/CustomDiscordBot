@@ -37,8 +37,15 @@ class GameChannel(commands.Cog):
                 "This thread is not part of the correct forum.", ephemeral=True
             )
             return
+
         if ctx.channel.locked:
             await ctx.respond("This thread is already locked.", ephemeral=True)
+            return
+
+        if not ctx.author.guild_permissions.manage_guild:
+            await ctx.channel.send(
+                "{ctx.guild.owner.mention} : {ctx.author.mention} requested a game channel for {game_name}. Please approve."
+            )
             return
 
         repo_name_sanitized = sanitize_repo_name(game_name)
