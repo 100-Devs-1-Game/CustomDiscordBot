@@ -80,13 +80,14 @@ class GameChannel(commands.Cog):
 
         thread = ctx.channel
         guild = ctx.guild
+        owner = thread.owner
 
         category = guild.get_channel(CHANNEL_CATEGORY)
 
         # create new text channel
         new_channel = await guild.create_text_channel(
             name=game_name,
-            topic=f"Copy of {thread.jump_url}\nRepository: {url}\nOwner: {ctx.author.mention}",
+            topic=f"Copy of {thread.jump_url}\nRepository: {url}\nOwner: {owner.mention}",
             category=category,
         )
 
@@ -97,14 +98,14 @@ class GameChannel(commands.Cog):
             name=f"[LOCKED] {thread.name}",
         )
 
-        Database.add_game(game_name, repo.name, new_channel.id, ctx.author)
+        Database.add_game(game_name, repo.name, new_channel.id, owner)
 
         # add link to new channel in old thread
         await thread.send(f"Thread closed. Continued in {new_channel.mention}")
 
         await self.copy_messages(thread, new_channel)
 
-        await Utils.send_guide_link(new_channel, ctx.author)
+        await Utils.send_guide_link(new_channel, owner)
 
         await new_channel.send(
             f"Here's the automatically created Github Repository: {url}"
