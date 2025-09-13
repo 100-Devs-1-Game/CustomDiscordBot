@@ -122,6 +122,24 @@ class Database:
             )
 
     @staticmethod
+    def remove_asset_requests_for_game(game_id):
+        Database.delete_from_db(
+            Database.GAMES_DB,
+            "asset_requests",
+            "game_id = ?",
+            (game_id,),
+        )
+
+    @staticmethod
+    def remove_contributor_requests_for_game(game_id):
+        Database.delete_from_db(
+            Database.GAMES_DB,
+            "contributor_requests",
+            "game_id = ?",
+            (game_id,),
+        )
+
+    @staticmethod
     def insert_into_db(db_path, table, **columns) -> bool:
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
@@ -208,6 +226,18 @@ class Database:
         conn.close()
 
         return [dict(zip(col_names, row)) for row in rows]
+
+    @staticmethod
+    def delete_from_db(db_path: str, table: str, where: str, params: tuple = ()):
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+
+        query = f"DELETE FROM {table} WHERE {where}"
+        print(f"Executing query: {query} with params: {params}")
+        cursor.execute(query, params)
+
+        conn.commit()
+        conn.close()
 
     @staticmethod
     def entry_exists(db_path: str, table: str, field: str, value) -> bool:
