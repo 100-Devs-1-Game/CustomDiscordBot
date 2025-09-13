@@ -31,3 +31,22 @@ class Utils:
                     print(
                         f"Deleted message {message.id}: {message.content} in channel {channel.id}"
                     )
+
+    @staticmethod
+    def ensure_env_var(key: str, value: str, filename: str = ".env"):
+        try:
+            with open(filename, "r") as f:
+                content = f.read()
+        except FileNotFoundError:
+            content = ""
+
+        # check if key exists already
+        for line in content.splitlines():
+            if line.strip().startswith(f"{key}="):
+                return  # already exists, do nothing
+
+        # make sure file ends with a newline before appending
+        with open(filename, "a") as f:
+            if content and not content.endswith("\n"):
+                f.write("\n")
+            f.write(f"{key}={value}\n")
