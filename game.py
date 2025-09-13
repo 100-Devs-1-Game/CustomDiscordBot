@@ -265,6 +265,41 @@ class Game(commands.Cog):
             ephemeral=True,
         )
 
+    @group.command(description="Remove all pending requests for this game")
+    async def removerequests(self, ctx: discord.ApplicationContext):
+        game_info = (
+            Database.get_default_game_info()
+            if Utils.is_test_environment()
+            else Database.get_game_info(ctx.channel.id)
+        )
+        if not game_info:
+            await ctx.respond("No game associated with this channel.", ephemeral=True)
+            return
+        if not ctx.author.guild_permissions.manage_guild:
+            await ctx.respond(
+                "Only moderators can update the itch.io link.", ephemeral=True
+            )
+            return
+
+        Database.remove_asset_requests_for_game(game_info["id"])
+
+        await ctx.defer()
+
+        # Remove all messages from channels that contain links to the games channel
+        await Utils.purge_messages_with_game_channel_link(
+            ctx.guild,
+            [
+                int(
+                    os.getenv("ANNOUNCE_CHANNEL_ID", 0)
+                ),  # Asset request announce channel
+                int(os.getenv("CONTRIBUTORS_REQUEST_CHANNEL_ID", 0)),
+            ],
+            game_info["channel_id"],
+        )
+        await ctx.respond(
+            "All pending requests for this game have been removed.", ephemeral=True
+        )
+
     @staticmethod
     async def send_game_info(ctx, game_info):
         description = game_info.get("description", "")
