@@ -1,3 +1,4 @@
+import os
 from collections import defaultdict
 
 import discord
@@ -32,7 +33,11 @@ SUPPORTED_REQUEST_ROLES = [
     "Voice Actor",
 ]
 
-CONTRIBUTOR_REQUEST_CHANNEL = 1414434518877601843  # Test Server: 1414479400250114058
+Utils.ensure_env_var(
+    "CONTRIBUTORS_REQUEST_CHANNEL_ID", 1414479400250114058
+)  # Test Server
+
+CONTRIBUTOR_REQUEST_CHANNEL = int(os.getenv("CONTRIBUTORS_REQUEST_CHANNEL_ID", 0))
 
 
 class Contributors(commands.Cog):
@@ -348,7 +353,7 @@ class ContributionRoleSelect(discord.ui.Select):
 
         if self.contributor_id == -1:
             # Requesting a contributor
-            channel = interaction.guild.get_channel(CONTRIBUTOR_REQUEST_CHANNEL)
+            channel = interaction.guild.get_channel(self.CONTRIBUTOR_REQUEST_CHANNEL)
             if not channel:
                 await interaction.response.send_message(
                     "⚠️ Contributor request channel not found. Please contact an admin.",
