@@ -239,7 +239,8 @@ class Game(commands.Cog):
 
         if not itchio_account:
             await ctx.respond(
-                "Please set your itch.io link first using `/contributors updateitchiolink`.",
+                "You need to have an itch.io account for this to work."
+                "\nIf you already have one or have successfully created a new one use `/contributors updateitchiolink` to update it in your contributors profile.",
                 ephemeral=True,
             )
             return
