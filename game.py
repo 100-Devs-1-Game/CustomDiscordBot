@@ -12,7 +12,7 @@ from github_wrapper import GithubWrapper
 from utils import Utils
 
 Utils.ensure_env_var("QA_CHANNEL_ID", "1416625126136483890")  # Test server
-Utils.ensure_env_var("SCHEDULE_CHANNEL_ID", "")  # Test server
+Utils.ensure_env_var("SCHEDULE_CHANNEL_ID", "1416666323831885905")  # Test server
 load_dotenv()
 
 TEST_CHANNEL_ID = int(os.getenv("TEST_CHANNEL_ID", "0"))
