@@ -11,9 +11,12 @@ from databases import Database
 from github_wrapper import GithubWrapper
 from utils import Utils
 
+Utils.ensure_env_var("QA_CHANNEL_ID", "1416625126136483890")  # Test server
 load_dotenv()
+
 TEST_CHANNEL_ID = int(os.getenv("TEST_CHANNEL_ID", "0"))
 ITCHIO_REQUEST_CHANNEL_ID = 1415533889891598336
+QA_CHANNEL_ID = int(os.getenv("QA_CHANNEL_ID"))
 
 
 class Game(commands.Cog):
@@ -298,6 +301,67 @@ class Game(commands.Cog):
         )
         await ctx.respond(
             "All pending requests for this game have been removed.", ephemeral=True
+        )
+
+    @group.command(description="Request game testing for your latest build")
+    async def test(self, ctx: discord.ApplicationContext, instructions: str = ""):
+        game_info = (
+            Database.get_default_game_info()
+            if Utils.is_test_environment()
+            else Database.get_game_info(ctx.channel.id)
+        )
+        if not game_info:
+            await ctx.respond("No game associated with this channel.", ephemeral=True)
+            return
+
+        if ctx.author.name != game_info["owner"] and not Game.is_contributor(
+            ctx, game_info
+        ):
+            await ctx.respond(
+                "Only the game owner or a contributor can request testing.",
+                ephemeral=True,
+            )
+            return
+
+        await ctx.defer(ephemeral=True)
+
+        request_channel = ctx.guild.get_channel(QA_CHANNEL_ID)
+        if not request_channel:
+            await ctx.respond("Request channel not found.", ephemeral=True)
+            return
+
+        role = discord.utils.get(ctx.interaction.guild.roles, name="PingTester")
+        instructions_text = instructions if instructions else "---"
+        itchio_link = game_info.get("itch_io_link", "")
+        itchio_text = f"<{itchio_link}>" if itchio_link else "---"
+
+        await request_channel.send(
+            f"User *{ctx.author.display_name}* has requested testing for the game <#{game_info['channel_id']}>."
+            f"\nGithub releases: <{GithubWrapper.GITHUB_URL_PREFIX + game_info['repo_name'] + '/releases'}>"
+            f"\nItchio page: {itchio_text}"
+            f"\nInstructions: {instructions_text}"
+            f"\n{role.mention} post your feedback in this thread 👇",
+            allowed_mentions=discord.AllowedMentions(roles=True),
+        )
+
+        # create a channel thread from that last posted message
+        last_message = await request_channel.history(limit=1).flatten()
+        if last_message:
+            thread = await last_message[0].create_thread(
+                name=f"Testing {game_info['name']}"
+            )
+
+            await thread.send(f"{ctx.author.mention} Feedback thread created.")
+
+            await thread.send(
+                "Testers: Please post your feedback here."
+                "\nMake sure to mention the platform you tested on (Windows, Mac, Linux, Web)."
+                "\nAnd the version you tested, if applicable ( may not be available for Web )."
+            )
+
+        await ctx.respond(
+            "✅ A request for testing has been added.",
+            ephemeral=True,
         )
 
     @staticmethod
