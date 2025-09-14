@@ -12,11 +12,13 @@ from github_wrapper import GithubWrapper
 from utils import Utils
 
 Utils.ensure_env_var("QA_CHANNEL_ID", "1416625126136483890")  # Test server
+Utils.ensure_env_var("SCHEDULE_CHANNEL_ID", "")  # Test server
 load_dotenv()
 
 TEST_CHANNEL_ID = int(os.getenv("TEST_CHANNEL_ID", "0"))
 ITCHIO_REQUEST_CHANNEL_ID = 1415533889891598336
 QA_CHANNEL_ID = int(os.getenv("QA_CHANNEL_ID"))
+SCHEDULE_CHANNEL_ID = int(os.getenv("SCHEDULE_CHANNEL_ID", "0"))
 
 
 class Game(commands.Cog):
@@ -333,7 +335,7 @@ class Game(commands.Cog):
         role = discord.utils.get(ctx.interaction.guild.roles, name="PingTester")
         instructions_text = instructions if instructions else "---"
         itchio_link = game_info.get("itch_io_link", "")
-        itchio_text = f"<{itchio_link}>" if itchio_link else "---"
+        itchio_text = f"<{itchio_link}> ( Pw: *100devs* )" if itchio_link else "---"
 
         await request_channel.send(
             f"User *{ctx.author.display_name}* has requested testing for the game <#{game_info['channel_id']}>."
@@ -363,6 +365,68 @@ class Game(commands.Cog):
             "✅ A request for testing has been added.",
             ephemeral=True,
         )
+
+    @group.command(description="Update your estimated release date")
+    async def updatereleasedate(
+        self, ctx: discord.ApplicationContext, minimum_days: int, maximum_days: int
+    ):
+        game_info = (
+            Database.get_default_game_info()
+            if Utils.is_test_environment()
+            else Database.get_game_info(ctx.channel.id)
+        )
+        if not game_info:
+            await ctx.respond("No game associated with this channel.", ephemeral=True)
+            return
+
+        if ctx.author.name != game_info["owner"]:
+            await ctx.respond(
+                "Only the game owner can set the release date.",
+                ephemeral=True,
+            )
+            return
+
+        await ctx.defer(ephemeral=True)
+
+        schedule_channel = ctx.guild.get_channel(SCHEDULE_CHANNEL_ID)
+        if schedule_channel is None:
+            schedule_channel = await ctx.guild.fetch_channel(SCHEDULE_CHANNEL_ID)
+
+        if await Utils.channel_is_empty(schedule_channel):
+            await schedule_channel.send("**Game release schedule:**")
+
+        message = await schedule_channel.fetch_message(schedule_channel.last_message_id)
+
+        content = message.content.splitlines()
+
+        # Ensure header exists
+        if not content or not content[0].startswith("**Game release schedule:**"):
+            content = ["**Game release schedule:**"]
+
+        timestamp1 = Utils.build_timestamp(minimum_days)
+        timestamp2 = Utils.build_timestamp(maximum_days)
+
+        duration_text = f"{timestamp1}"
+        if timestamp1 != timestamp2:
+            duration_text += f" - {timestamp2}"
+
+        entry = f"{ctx.channel.mention} :  {duration_text}"
+
+        # Check if this game channel already exists in the message
+        updated = False
+        for i, line in enumerate(content[1:], start=1):
+            if line.startswith(str(ctx.channel.mention)):
+                content[i] = entry
+                updated = True
+                break
+
+        if not updated:
+            content.append(entry)
+
+        # Push the edit
+        await message.edit(content="\n".join(content))
+
+        await ctx.respond("Schedule updated!", ephemeral=True)
 
     @staticmethod
     async def send_game_info(ctx, game_info):
