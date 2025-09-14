@@ -1,4 +1,5 @@
 import os
+from datetime import datetime, timedelta, timezone
 
 
 class Utils:
@@ -50,3 +51,8 @@ class Utils:
             if content and not content.endswith("\n"):
                 f.write("\n")
             f.write(f"{key}={value}\n")
+
+    @staticmethod
+    def build_timestamp(days_from_now: int) -> str:
+        target = datetime.now(timezone.utc) + timedelta(days=days_from_now)
+        return f"<t:{int(target.timestamp())}:R>"  # :R = relative (e.g. "in 2 days")
