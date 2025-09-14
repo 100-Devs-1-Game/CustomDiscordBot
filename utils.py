@@ -1,6 +1,8 @@
 import os
 from datetime import datetime, timedelta, timezone
 
+import discord
+
 
 class Utils:
     @staticmethod
@@ -56,3 +58,9 @@ class Utils:
     def build_timestamp(days_from_now: int) -> str:
         target = datetime.now(timezone.utc) + timedelta(days=days_from_now)
         return f"<t:{int(target.timestamp())}:R>"  # :R = relative (e.g. "in 2 days")
+
+    @staticmethod
+    async def channel_is_empty(channel: discord.TextChannel) -> bool:
+        async for _ in channel.history(limit=1):
+            return False  # found at least one message
+        return True
