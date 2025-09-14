@@ -20,7 +20,8 @@ COMMANDS = [
     # "/game setitchiolink",
     # "/contributors makeitchioadmin",
     "/game build",
-    "/onboarding test",
+    "/game test",
+    "/game updatereleasedate/onboarding test",
 ]
 
 
