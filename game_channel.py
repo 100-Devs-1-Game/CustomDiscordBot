@@ -44,7 +44,7 @@ class GameChannel(commands.Cog):
 
         if not ctx.author.guild_permissions.manage_guild:
             await ctx.channel.send(
-                "{ctx.guild.owner.mention} : {ctx.author.mention} requested a game channel for {game_name}. Please approve."
+                f"{ctx.guild.owner.mention} : {ctx.author.mention} requested a game channel for {game_name}. Please approve."
             )
             return
 
