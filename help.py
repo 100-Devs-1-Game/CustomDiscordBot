@@ -12,6 +12,8 @@ COMMANDS = [
     "/contributors export",
     "/contributors register",
     "/contributors request",
+    "/contributors updatecreditname",
+    "/contributors updateitchiolink",
     "/create_game",
     "/fun",
     "/game info",
@@ -21,7 +23,8 @@ COMMANDS = [
     # "/contributors makeitchioadmin",
     "/game build",
     "/game test",
-    "/game updatereleasedate/onboarding test",
+    "/game updatereleasedate",
+    "/onboarding test",
 ]
 
 
