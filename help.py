@@ -5,9 +5,9 @@ from onboarding import Onboarding
 
 COMMANDS = [
     "/help ...",
-    "/assets listaccepted",
-    "/assets listrequests",
-    "/assets request",
+    # "/assets listaccepted",
+    # "/assets listrequests",
+    # "/assets request",
     "/contributors add",
     "/contributors export",
     "/contributors register",
