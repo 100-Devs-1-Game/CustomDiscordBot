@@ -367,7 +367,9 @@ class Game(commands.Cog):
             ephemeral=True,
         )
 
-    @group.command(description="Update your estimated release date")
+    @group.command(
+        description="Update your estimated timeframe in which your game will be ready to be released"
+    )
     async def updatereleasedate(
         self, ctx: discord.ApplicationContext, minimum_days: int, maximum_days: int
     ):
@@ -393,16 +395,18 @@ class Game(commands.Cog):
         if schedule_channel is None:
             schedule_channel = await ctx.guild.fetch_channel(SCHEDULE_CHANNEL_ID)
 
+        header_str = "**Estimated remaining development time:**"
+
         if await Utils.channel_is_empty(schedule_channel):
-            await schedule_channel.send("**Game release schedule:**")
+            await schedule_channel.send(header_str)
 
         message = await schedule_channel.fetch_message(schedule_channel.last_message_id)
 
         content = message.content.splitlines()
 
         # Ensure header exists
-        if not content or not content[0].startswith("**Game release schedule:**"):
-            content = ["**Game release schedule:**"]
+        if not content or not content[0].startswith(header_str):
+            content = [header_str]
 
         timestamp1 = Utils.build_timestamp(minimum_days)
         timestamp2 = Utils.build_timestamp(maximum_days)
