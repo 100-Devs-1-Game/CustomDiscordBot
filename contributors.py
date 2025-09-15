@@ -268,19 +268,20 @@ class Contributors(commands.Cog):
             await ctx.respond("❌ You do not have permission to use this command.")
             return
 
-            try:
-                await user.send(
-                    f"Hello {user.display_name},\n\n"
-                    f"You have been made an admin for the itch.io page of a game.\n"
-                    f"Please visit the following link to manage your game's page:\n{link}\n"
-                    "Best regards,\n**The Godot Collaborative Game Jam team**"
-                )
-            except discord.Forbidden:
-                await ctx.respond(
-                    f"⚠️ Could not send DM to {user.display_name}. They might have DMs disabled.",
-                    ephemeral=True,
-                )
-                return
+        try:
+            await user.send(
+                f"Hello {user.display_name},\n\n"
+                f"You have been made an admin for the itch.io page of a game.\n"
+                f"Please follow the link to accept the invitation:\n{link}\n"
+                "Make sure to check *Display as contributor* under *More->Admins* so this game shows up on your itch.io profile.\n\n"
+                "\n\n**The Godot Collaborative Game Jam team**"
+            )
+        except discord.Forbidden:
+            await ctx.respond(
+                f"⚠️ Could not send DM to {user.display_name}. They might have DMs disabled.",
+                ephemeral=True,
+            )
+            return
 
         await ctx.respond(f"✅ Invite sent to {user.display_name}")
 
