@@ -360,7 +360,7 @@ class ContributionRoleSelect(discord.ui.Select):
 
         if self.contributor_id == -1:
             # Requesting a contributor
-            channel = interaction.guild.get_channel(self.CONTRIBUTOR_REQUEST_CHANNEL)
+            channel = interaction.guild.get_channel(CONTRIBUTOR_REQUEST_CHANNEL)
             if not channel:
                 await interaction.response.send_message(
                     "⚠️ Contributor request channel not found. Please contact an admin.",
@@ -389,9 +389,17 @@ class ContributionRoleSelect(discord.ui.Select):
                 channel_message, allowed_mentions=discord.AllowedMentions(roles=True)
             )
 
+            # create a channel thread from that last posted message
+            last_message = await channel.history(limit=1).flatten()
+            if last_message:
+                thread = await last_message[0].create_thread(name="Details")
+
+                await thread.send("Post more details about your request here:")
+
             await interaction.response.send_message(
                 f"✅ Requested contributor role: **{self.values[0]}**\n"
-                "The request has been posted in <#{CONTRIBUTOR_REQUEST_CHANNEL}> you can mark it as done ✅ once you found someone.",
+                f"The request has been posted in <#{CONTRIBUTOR_REQUEST_CHANNEL}> you can mark it as done ✅ once you found someone."
+                "\nA thread has been created in that channel as well for you to post more details about your request.",
                 ephemeral=True,
             )
             return
