@@ -19,17 +19,23 @@ CONTRIBUTION_TYPES = [
     "Voice Actor",
     "Translator",
 ]
+
 PING_ROLES = {
+    "Programmer": "PingCoder",
+    "2D Artist": "Ping2DArtist",
+    "3D Artist": "Ping3DArtist",
     "Composer": "PingComposer",
     "Sound Designer": "PingSFX",
     "Writer": "PingWriter",
     "Voice Actor": "PingVoice",
-    "Programmer": "PingCoder",
 }
 
 SUPPORTED_REQUEST_ROLES = [
-    "Composer",
     "Programmer",
+    "2D Artist",
+    "Composer",
+    "Sound Designer",
+    "Writer",
     "Voice Actor",
 ]
 
