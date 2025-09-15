@@ -254,6 +254,9 @@ class Contributors(commands.Cog):
             )
             return
 
+        if not link.startswith("https://") and not link.startswith("http://"):
+            link = "https://" + link
+
         Database.update_field(
             Database.GAMES_DB,
             "contributors",
