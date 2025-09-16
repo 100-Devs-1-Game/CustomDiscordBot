@@ -273,16 +273,16 @@ class Contributors(commands.Cog):
     async def makeitchioadmin(
         self, ctx: discord.ApplicationContext, user: discord.User, link: str
     ):
-        if not ctx.author.guild_permissions.manage_guild:
-            await ctx.respond("❌ You do not have permission to use this command.")
-            return
+        # if not ctx.author.guild_permissions.manage_guild:
+        #     await ctx.respond("❌ You do not have permission to use this command.")
+        #     return
 
         try:
             await user.send(
                 f"Hello {user.display_name},\n\n"
                 f"You have been made an admin for the itch.io page of a game.\n"
                 f"Please follow the link to accept the invitation:\n{link}\n"
-                "Make sure to check *Display as contributor* under *More->Admins* so this game shows up on your itch.io profile.\n\n"
+                "Make sure to check *Display as contributor* under *Edit Game->More->Admins* so this game shows up in your itch.io profile.\n\n"
                 "\n\n**The Godot Collaborative Game Jam team**"
             )
         except discord.Forbidden:
