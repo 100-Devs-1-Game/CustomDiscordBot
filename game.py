@@ -433,6 +433,44 @@ class Game(commands.Cog):
 
         await ctx.respond("Schedule updated!", ephemeral=True)
 
+    @group.command(
+        description="Update your estimated timeframe in which your game will be ready to be released"
+    )
+    async def listcontributorsitchio(self, ctx: discord.ApplicationContext):
+        game_info = (
+            Database.get_default_game_info()
+            if Utils.is_test_environment()
+            else Database.get_game_info(ctx.channel.id)
+        )
+        if not game_info:
+            await ctx.respond("No game associated with this channel.", ephemeral=True)
+            return
+
+        if ctx.author.name != game_info["owner"] and not Game.is_contributor(
+            ctx, game_info
+        ):
+            await ctx.respond(
+                "Only the game owner or a contributor can request testing.",
+                ephemeral=True,
+            )
+            return
+
+        # respond with a list of contributors and their itch.io links
+        contributors = Game.fetch_contributors(game_info)
+        if not contributors:
+            await ctx.respond("No contributors found.", ephemeral=True)
+            return
+
+        contributors_list = "\n".join(
+            f"**{c['discord_display_name']}** — [Itch.io Link]({c['itch_io_link']})"
+            for c in contributors
+            if c.get("itch_io_link")
+        )
+        if not contributors_list:
+            contributors_list = "No Itch.io links found."
+
+        await ctx.respond(f"**Contributors:**\n{contributors_list}", ephemeral=True)
+
     @staticmethod
     async def send_game_info(ctx, game_info):
         description = game_info.get("description", "")
