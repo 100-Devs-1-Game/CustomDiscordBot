@@ -456,20 +456,27 @@ class Game(commands.Cog):
             return
 
         # respond with a list of contributors and their itch.io links
-        contributors = Game.fetch_contributors(game_info)
-        if not contributors:
-            await ctx.respond("No contributors found.", ephemeral=True)
-            return
-
-        contributors_list = "\n".join(
-            f"**{c['discord_display_name']}** — [Itch.io Link]({c['itch_io_link']})"
-            for c in contributors
-            if c.get("itch_io_link")
+        contributors = Database.execute(
+            Database.GAMES_DB,
+            """
+			SELECT c.discord_display_name, c.itch_io_link
+			FROM game_contributors gc
+			JOIN contributors c ON c.id = gc.contributor_id
+			WHERE gc.game_id = ?
+		""",
+            (game_info["id"],),
         )
-        if not contributors_list:
-            contributors_list = "No Itch.io links found."
-
-        await ctx.respond(f"**Contributors:**\n{contributors_list}", ephemeral=True)
+        if not contributors:
+            await ctx.respond("No contributors found for this game.", ephemeral=True)
+            return
+        lines = []
+        for name, link in contributors:
+            if link:
+                lines.append(f"**{name}**: <{link}>")
+            else:
+                lines.append(f"**{name}**: No itch.io link provided.")
+        response = "\n".join(lines)
+        await ctx.respond(response, ephemeral=True)
 
     @staticmethod
     async def send_game_info(ctx, game_info):
