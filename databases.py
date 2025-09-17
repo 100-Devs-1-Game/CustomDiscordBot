@@ -29,7 +29,7 @@ class Database:
             channel = (
                 cls.bot.get_channel(cls.TEST_CHANNEL_TO_PRINT_DB_LOGS)
                 if Utils.is_test_environment()
-                else cls.REAL_CHANNEL_TO_PRINT_DB_LOGS
+                else cls.bot.get_channel(cls.REAL_CHANNEL_TO_PRINT_DB_LOGS)
             )
 
             if channel:
