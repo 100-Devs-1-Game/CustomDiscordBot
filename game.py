@@ -400,7 +400,10 @@ class Game(commands.Cog):
         if await Utils.channel_is_empty(schedule_channel):
             await schedule_channel.send(header_str)
 
-        message = await schedule_channel.fetch_message(schedule_channel.last_message_id)
+        # Get the very first message from the schedule channel
+        async for msg in schedule_channel.history(limit=1, oldest_first=True):
+            message = msg
+            break
 
         content = message.content.splitlines()
 
