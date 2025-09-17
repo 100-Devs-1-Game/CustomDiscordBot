@@ -34,11 +34,10 @@ class Database:
 
             if channel:
                 asyncio.run_coroutine_threadsafe(channel.send(message), cls.bot.loop)
-                print(f"{message}")
-            else:
-                print(f"{message}")
+
+            print(f"{message}")
         except Exception as e:
-            print(f"{e}:\n\t{message}")
+            print(f"{e}: here is the message that didn't get logged:\n\t{message}")
 
     @staticmethod
     def add_game(name, repo_name, channel_id, owner):
@@ -190,7 +189,8 @@ class Database:
 
             cursor.execute(f"SELECT * FROM {table} WHERE id = ?", (row_id,))
             new_row = cursor.fetchone()
-            new_dict = dict(zip(columns, new_row)) if new_row else {}
+            col_names = [desc[0] for desc in cursor.description]
+            new_dict = dict(zip(col_names, new_row)) if new_row else {}
 
             new_lines = "\n".join(f"    {k}: {v!r}" for k, v in new_dict.items())
             Database._log(f"**New entry in `{table}`**\n```\n{new_lines}\n```\n")
