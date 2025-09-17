@@ -56,29 +56,31 @@ async def on_ready():
 @bot.listen
 async def on_interaction(interaction: discord.Interaction):
     try:
-        user = interaction.user
-        guild = interaction.guild.name if interaction.guild else "DM"
-        channel = f"#{interaction.channel}" if interaction.channel else "N/A"
+        user = f"'{interaction.user}'"
+        guild = f"'{interaction.guild.name if interaction.guild else 'DM'}'"
+        channel = f"'#{interaction.channel if interaction.channel else 'N/A'}'"
 
         if interaction.type == discord.InteractionType.application_command:
             print(
-                f"[SlashCommand] {user} used /{interaction.data['name']} in {guild} {channel}"
+                f"[SlashCommand] {user} used /{interaction.data['name']} in {guild} {channel} with data:\n\t{interaction.data}"
             )
         elif interaction.type == discord.InteractionType.component:
             print(
-                f"[Component] {user} clicked: {interaction.data} in {guild} {channel}"
+                f"[Component] {user} clicked on component in {guild} {channel} with data:\n\t{interaction.data}"
             )
         elif interaction.type == discord.InteractionType.modal_submit:
             print(
-                f"[ModalSubmit] {user} submitted: {interaction.data} in {guild} {channel}"
+                f"[ModalSubmit] {user} submitted modal in {guild} {channel} with data:\n\t{interaction.data}"
             )
         else:
             print(
-                f"[OtherInteraction] {user} triggered: {interaction.data} in {guild} {channel}"
+                f"[OtherInteraction] {user} triggered interaction in {guild} {channel} with data:\n\t{interaction.data}"
             )
 
     except Exception as e:
-        print(f"[InteractionError] Exception while logging interaction: {e}")
+        print(
+            f"[InteractionError] Exception while logging interaction from user {user} in {guild} {channel}: {e}\nInteraction: {interaction}"
+        )
         traceback.print_exc()
 
     sys.stdout.flush()
