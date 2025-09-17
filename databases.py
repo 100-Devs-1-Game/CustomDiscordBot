@@ -1,11 +1,44 @@
+import asyncio
 import os
 import sqlite3
 
+import discord
+
+from utils import Utils
+
 
 class Database:
+    bot: discord.Bot | None = None
+    TEST_CHANNEL_TO_PRINT_DB_LOGS = 1417887751080116234
+    REAL_CHANNEL_TO_PRINT_DB_LOGS = 1417887126695182397
     GAMES_DB = "dbs/games.db"
     TASKS_DB = "dbs/tasks.db"
     EVENTS_DB = "dbs/events.db"
+
+    @classmethod
+    def init(cls, bot: discord.Bot):
+        cls.bot = bot
+
+    @classmethod
+    def _log(cls, message: str):
+        try:
+            if cls.bot is None:
+                print(f"{message}")
+                return
+
+            channel = (
+                cls.bot.get_channel(cls.TEST_CHANNEL_TO_PRINT_DB_LOGS)
+                if Utils.is_test_environment()
+                else cls.REAL_CHANNEL_TO_PRINT_DB_LOGS
+            )
+
+            if channel:
+                asyncio.run_coroutine_threadsafe(channel.send(message), cls.bot.loop)
+                print(f"{message}")
+            else:
+                print(f"{message}")
+        except Exception as e:
+            print(f"{e}:\n\t{message}")
 
     @staticmethod
     def add_game(name, repo_name, channel_id, owner):
@@ -152,11 +185,19 @@ class Database:
             cursor.execute(
                 f"INSERT INTO {table} ({keys}) VALUES ({placeholders})", values
             )
+            row_id = cursor.lastrowid
             conn.commit()
+
+            cursor.execute(f"SELECT * FROM {table} WHERE id = ?", (row_id,))
+            new_row = cursor.fetchone()
+            new_dict = dict(zip(columns, new_row)) if new_row else {}
+
+            new_lines = "\n".join(f"    {k}: {v!r}" for k, v in new_dict.items())
+            Database._log(f"**New entry in `{table}`**\n```\n{new_lines}\n```\n")
+
             return True
         except sqlite3.IntegrityError as e:
-            # unique constraint or other integrity failure
-            print(f"[DB] Insert failed: {e}")
+            Database._log(f"! | New entry failed to insert in `{table}`: {e}")
             return False
         finally:
             conn.close()
@@ -166,23 +207,28 @@ class Database:
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
 
-        print(
-            "Updating field:",
-            field,
-            "to value:",
-            value,
-            "in table:",
-            table,
-            "for row ID:",
-            row_id,
-        )
+        cursor.execute(f"SELECT * FROM {table} WHERE id = ?", (row_id,))
+        old_row = cursor.fetchone()
+        col_names = [desc[0] for desc in cursor.description]
+        old_dict = dict(zip(col_names, old_row)) if old_row else {}
 
         # Use parameterized query to avoid SQL injection
         query = f"UPDATE {table} SET {field} = ? WHERE id = ?"
         cursor.execute(query, (value, row_id))
-
         conn.commit()
+
+        cursor.execute(f"SELECT * FROM {table} WHERE id = ?", (row_id,))
+        new_row = cursor.fetchone()
+        new_dict = dict(zip(col_names, new_row)) if new_row else {}
+
         conn.close()
+
+        old_lines = "\n".join(f"    {k}: {v!r}" for k, v in old_dict.items())
+        new_lines = "\n".join(f"    {k}: {v!r}" for k, v in new_dict.items())
+
+        log_message = f"**Updated `{table}`**\nBefore:\n```\n{old_lines}\n```\nAfter:\n```\n{new_lines}\n```"
+
+        Database._log(log_message)
 
     @staticmethod
     def fetch_one_as_dict(
@@ -232,12 +278,30 @@ class Database:
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
 
+        cursor.execute(f"SELECT * FROM {table} WHERE {where}", params)
+        rows = cursor.fetchall()
+        col_names = [d[0] for d in cursor.description]
+
         query = f"DELETE FROM {table} WHERE {where}"
         print(f"Executing query: {query} with params: {params}")
         cursor.execute(query, params)
 
         conn.commit()
         conn.close()
+
+        if rows:
+            msg_lines = [f"**Deleted from `{table}`**\n```\n"]
+            for row in rows:
+                row_dict = dict(zip(col_names, row))
+                formatted_row = "\n".join(
+                    f"    {k}: {v!r}" for k, v in row_dict.items()
+                )
+                msg_lines.append(formatted_row)
+            Database._log("\n```\n".join(msg_lines))
+        else:
+            Database._log(
+                f"Delete executed on `{table}` with no matches (where={where})"
+            )
 
     @staticmethod
     def entry_exists(db_path: str, table: str, field: str, value) -> bool:
@@ -276,7 +340,7 @@ setup_db(
     [
         {
             "name": "games",
-            "columns": "id INTEGER PRIMARY KEY, name TEXT, repo_name TEXT, channel_id INTEGER, owner TEXT, itch_io_link TEXT",
+            "columns": "id INTEGER PRIMARY KEY, name TEXT, repo_name TEXT, channel_id INTEGER, owner TEXT, owner_display_name TEXT, itch_io_link TEXT",
         }
     ],
 )

@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from github import Auth, Github
 
 from contributors import Contributors
+from databases import Database
 from fun import Fun
 from game import Game
 from game_channel import GameChannel
@@ -125,6 +126,9 @@ async def create_issue(ctx: discord.ApplicationContext, title: str, body: str = 
 
 
 if __name__ == "__main__":
+    # for logging db changes to discord
+    Database.init(bot)
+
     bot.add_cog(Potato(bot))
     bot.add_cog(Fun(bot))
     bot.add_cog(Help(bot))
