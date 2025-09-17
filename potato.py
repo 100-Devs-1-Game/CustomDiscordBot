@@ -23,7 +23,7 @@ class Potato(commands.Cog):
         self.bot = bot
         words = "|".join(re.escape(word) for word in self.POTATOES)
         self.pattern = re.compile(rf"\b(?:{words})\b|🥔|:potato:", re.IGNORECASE)
-        print(self.pattern)
+        #print(f"Using potato reaction regex: {self.pattern}")
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
