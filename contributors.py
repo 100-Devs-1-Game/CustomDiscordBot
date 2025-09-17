@@ -33,6 +33,7 @@ PING_ROLES = {
 SUPPORTED_REQUEST_ROLES = [
     "Programmer",
     "2D Artist",
+    "3D Artist",
     "Composer",
     "Sound Designer",
     "Writer",
