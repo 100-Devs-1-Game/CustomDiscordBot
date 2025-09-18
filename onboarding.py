@@ -3,9 +3,7 @@ from discord.ext import commands
 
 # === Configurable ===
 GREETING_MESSAGE = "Welcome to our Community!"
-COMMUNITY_DESCRIPTION = (
-    "We are trying to make video games with as many contributors as possible."
-)
+COMMUNITY_DESCRIPTION = "We are trying to make video games with as many contributors as possible. We are hobbyists, our games are free and open source, no one is paid."
 FOOTER_TEXT = """
 Type /help [...] or ask in one of the ❓ channels if you don't know where to start or need assistance. 
 We are always happy to help!
