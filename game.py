@@ -98,8 +98,10 @@ class Game(commands.Cog):
             await ctx.respond("No game associated with this channel.", ephemeral=True)
             return
 
-        if ctx.author.name != game_info["owner"] and not Game.is_contributor(
-            ctx, game_info
+        if (
+            ctx.author.name != game_info["owner"]
+            and not Game.is_contributor(ctx, game_info)
+            and not ctx.author.guild_permissions.manage_guild
         ):
             await ctx.respond(
                 "Only the game owner or a contributor can trigger a build.",
