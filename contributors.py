@@ -74,7 +74,10 @@ class Contributors(commands.Cog):
             await ctx.respond("⚠️ No game found for this channel.", ephemeral=True)
             return
 
-        if ctx.author.name != game_info["owner"]:
+        if (
+            ctx.author.name != game_info["owner"]
+            and not ctx.author.guild_permissions.manage_guild
+        ):
             await ctx.respond(
                 "❌ Only the game owner can add contributors.", ephemeral=True
             )
