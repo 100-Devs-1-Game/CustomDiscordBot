@@ -54,7 +54,7 @@ class Onboarding(commands.Cog):
             inline=False,
         )
 
-        embed.set_footer(text=LINKS_TEXT.strip())
+        embed.set_footer(text=LINKS_TEXT)
 
         return embed
 
