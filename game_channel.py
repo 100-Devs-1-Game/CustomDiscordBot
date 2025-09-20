@@ -121,7 +121,8 @@ class GameChannel(commands.Cog):
                     content += f"\n{att.url}"
             if content.strip():
                 await new_channel.send(
-                    content,
+                    # cut off at 2000 characters, discord message limit
+                    content=content[:2000],
                     allowed_mentions=discord.AllowedMentions.none(),
                     silent=True,
                 )
