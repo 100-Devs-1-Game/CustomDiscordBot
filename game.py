@@ -386,7 +386,7 @@ class Game(commands.Cog):
 
         if (
             ctx.author.name != game_info["owner"]
-            or not ctx.author.guild_permissions.manage_guild
+            and not ctx.author.guild_permissions.manage_guild
         ):
             await ctx.respond(
                 "Only the game owner can set the release date.",
