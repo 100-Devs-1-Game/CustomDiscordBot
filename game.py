@@ -451,15 +451,6 @@ class Game(commands.Cog):
             await ctx.respond("No game associated with this channel.", ephemeral=True)
             return
 
-        if ctx.author.name != game_info["owner"] and not Game.is_contributor(
-            ctx, game_info
-        ):
-            await ctx.respond(
-                "Only the game owner or a contributor can request testing.",
-                ephemeral=True,
-            )
-            return
-
         # respond with a list of contributors and their itch.io links
         contributors = Database.execute(
             Database.GAMES_DB,
