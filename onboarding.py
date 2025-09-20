@@ -54,7 +54,11 @@ class Onboarding(commands.Cog):
             inline=False,
         )
 
-        embed.set_footer(text=LINKS_TEXT)
+        embed.add_field(
+            name="Links",
+            value=LINKS_TEXT,
+            inline=False,
+        )
 
         return embed
 
