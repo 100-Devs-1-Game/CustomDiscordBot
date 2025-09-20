@@ -284,7 +284,7 @@ class Contributors(commands.Cog):
         try:
             await user.send(
                 f"Hello {user.display_name},\n\n"
-                f"You have been made an admin for the itch.io page of a game.\n"
+                f"You have been made an admin for the itch.io page of a game by {ctx.author.display_name}.\n"
                 f"Please follow the link to accept the invitation:\n{link}\n"
                 "Make sure to check *Display as contributor* under *Edit Game->More->Admins* so this game shows up in your itch.io profile.\n\n"
                 "\n\n**The Godot Collaborative Game Jam team**"
