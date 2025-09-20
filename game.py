@@ -439,6 +439,7 @@ class Game(commands.Cog):
 
         if not updated:
             content.append(entry)
+        content = [line for line in content if line.strip()]  # remove empty lines
 
         # Push the edit
         await message.edit(content="\n".join(content))
