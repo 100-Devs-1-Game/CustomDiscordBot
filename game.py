@@ -439,7 +439,7 @@ class Game(commands.Cog):
         await ctx.respond("Schedule updated!", ephemeral=True)
 
     @group.command(
-        description="Update your estimated timeframe in which your game will be ready to be released"
+        description="List all contributors to this game along with their itch.io links (if provided)"
     )
     async def listcontributorsitchio(self, ctx: discord.ApplicationContext):
         game_info = (
