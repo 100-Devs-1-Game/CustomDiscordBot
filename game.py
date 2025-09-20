@@ -384,7 +384,10 @@ class Game(commands.Cog):
             await ctx.respond("No game associated with this channel.", ephemeral=True)
             return
 
-        if ctx.author.name != game_info["owner"]:
+        if (
+            ctx.author.name != game_info["owner"]
+            or not ctx.author.guild_permissions.manage_guild
+        ):
             await ctx.respond(
                 "Only the game owner can set the release date.",
                 ephemeral=True,
