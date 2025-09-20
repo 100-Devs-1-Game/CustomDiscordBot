@@ -413,14 +413,18 @@ class Game(commands.Cog):
         if not content or not content[0].startswith(header_str):
             content = [header_str]
 
-        timestamp1 = Utils.build_timestamp(minimum_days)
-        timestamp2 = Utils.build_timestamp(maximum_days)
+        if minimum_days > 0:
+            timestamp1 = Utils.build_timestamp(minimum_days)
+            timestamp2 = Utils.build_timestamp(maximum_days)
 
-        duration_text = f"{timestamp1}"
-        if timestamp1 != timestamp2:
-            duration_text += f" - {timestamp2}"
+            duration_text = f"{timestamp1}"
+            if timestamp1 != timestamp2:
+                duration_text += f" - {timestamp2}"
 
-        entry = f"{ctx.channel.mention} :  {duration_text}"
+            entry = f"{ctx.channel.mention} :  {duration_text}"
+        else:
+            # remove entry if minimum_days is 0 or less
+            entry = ""
 
         # Check if this game channel already exists in the message
         updated = False
