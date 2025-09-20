@@ -12,6 +12,8 @@ Remember: Everyone is welcome to contribute, no matter your skill level or backg
 If you don't think you have the required skills, we can help you learn them at least! 
 Either way, you’re always welcome to suggest improvements to our projects, game features and workflow.
 """
+LINKS_TEXT = "Follow us on [Bluesky](https://bsky.app/profile/godot-collab-jam.bsky.social) and [Itch.io](https://100devs.itch.io/)!"
+
 
 HIGHLIGHT_CHANNEL_IDS = [
     1393312261770051674,
@@ -46,12 +48,14 @@ class Onboarding(commands.Cog):
                 inline=False,
             )
 
-        # embed.set_footer(text=FOOTER_TEXT.strip())
         embed.add_field(
             name="Need help?",
             value=FOOTER_TEXT.strip(),
             inline=False,
         )
+
+        embed.set_footer(text=LINKS_TEXT.strip())
+
         return embed
 
     @commands.Cog.listener()
