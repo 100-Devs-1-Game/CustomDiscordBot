@@ -179,25 +179,21 @@ class Database:
         keys = ", ".join(columns.keys())
         placeholders = ", ".join(["?"] * len(columns))
         values = tuple(columns.values())
+        new_lines = "\n".join(f"    {k}: {v!r}" for k, v in columns.items())
 
         try:
             cursor.execute(
                 f"INSERT INTO {table} ({keys}) VALUES ({placeholders})", values
             )
-            row_id = cursor.lastrowid
             conn.commit()
 
-            cursor.execute(f"SELECT * FROM {table} WHERE id = ?", (row_id,))
-            new_row = cursor.fetchone()
-            col_names = [desc[0] for desc in cursor.description]
-            new_dict = dict(zip(col_names, new_row)) if new_row else {}
-
-            new_lines = "\n".join(f"    {k}: {v!r}" for k, v in new_dict.items())
             Database._log(f"**New entry in `{table}`**\n```\n{new_lines}\n```\n")
 
             return True
         except sqlite3.IntegrityError as e:
-            Database._log(f"! | New entry failed to insert in `{table}`: {e}")
+            Database._log(
+                f"**New entry failed to insert in `{table}`**: {e}\n```\n{new_lines}\n```\n"
+            )
             return False
         finally:
             conn.close()
