@@ -1,7 +1,7 @@
 import re
 
 import discord
-from discord import option
+from discord import ChannelFlags, Thread, option
 from discord.ext import commands
 
 from databases import Database
@@ -91,25 +91,38 @@ class GameChannel(commands.Cog):
             category=category,
         )
 
-        # lock thread
-        await thread.edit(
-            # archived=True,
-            locked=True,
-            name=f"[LOCKED] {thread.name}",
-        )
-
         Database.add_game(game_name, repo.name, new_channel.id, owner)
 
         # add link to new channel in old thread
         await thread.send(f"Thread closed. Continued in {new_channel.mention}")
 
         await self.copy_messages(thread, new_channel)
-
         await Utils.send_guide_link(new_channel, owner)
-
         await new_channel.send(
             f"Here's the automatically created Github Repository: {url}"
         )
+
+        # note: copied from the pycord thread.edit() func
+        async def close_and_lock_and_archive() -> Thread:
+            """
+            the one in the library doesn't support https://discord-api-types.dev/api/discord-api-types-v10/enum/ChannelFlags#ActiveChannelsRemoved
+            """
+
+            payload = {}
+            payload["name"] = f"[LOCKED] {thread.name}"
+            payload["archived"] = True
+            payload["locked"] = True
+
+            # copy the ChannelFlags object to avoid mutating the original
+            flags = ChannelFlags._from_value(thread.flags.value)
+            flags.value |= 1 << 2  # the secret magic flag o.o
+            payload["flags"] = flags.value
+
+            data = await thread._state.http.edit_channel(thread.id, **payload)
+            # The data payload will always be a Thread payload
+            return Thread(data=data, state=thread._state, guild=thread.guild)  # type: ignore
+
+        await close_and_lock_and_archive()
 
     async def copy_messages(self, thread, new_channel):
         async for msg in thread.history(oldest_first=True):
