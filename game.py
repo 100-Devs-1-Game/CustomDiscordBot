@@ -1,4 +1,5 @@
 import os
+import sys
 from datetime import datetime, timezone
 
 import discord
@@ -45,13 +46,16 @@ class Game(commands.Cog):
     @group.command(description="Get a list of all games")
     async def list(self, ctx: discord.ApplicationContext):
         print("someone did /game list")
+        sys.stdout.flush()
         games: list[dict] = Database.fetch_all_as_dict_arr(
             Database.GAMES_DB,
             "games",
         )
         print("now we have the games, send it")
+        sys.stdout.flush()
         await Game.send_games_list(ctx, games)
         print("we did the sending")
+        sys.stdout.flush()
 
     @group.command(description="Set or update the description for your game")
     async def setdescription(self, ctx: discord.ApplicationContext):
@@ -572,6 +576,7 @@ class Game(commands.Cog):
     @staticmethod
     async def send_games_list(ctx, games):
         print("sending games list")
+        sys.stdout.flush()
         embed = discord.Embed(
             title="List of games",
             color=discord.Color.blurple(),
@@ -593,8 +598,10 @@ class Game(commands.Cog):
         )
 
         print("sending games list - responding")
+        sys.stdout.flush()
         await ctx.respond(embed=embed, ephemeral=True)
         print("sending games list - responded")
+        sys.stdout.flush()
 
 
 class DescriptionModal(Modal):
