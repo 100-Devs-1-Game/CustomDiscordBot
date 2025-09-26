@@ -42,6 +42,17 @@ class Game(commands.Cog):
 
         await Game.send_game_info(ctx, game_info)
 
+    @group.command(
+        description="Get a list of all games"
+    )
+    async def list(self, ctx: discord.ApplicationContext):
+        games: list[dict] = Database.fetch_all_as_dict_arr(
+            Database.GAMES_DB,
+            "games",
+        )
+        await Game.send_games_list(ctx, games)
+
+
     @group.command(description="Set or update the description for your game")
     async def setdescription(self, ctx: discord.ApplicationContext):
         game_info = (
@@ -558,6 +569,29 @@ class Game(commands.Cog):
         )
         return role is not None
 
+    @staticmethod
+    async def send_games_list(ctx, games):
+        embed = discord.Embed(
+            title="List of games",
+            color=discord.Color.blurple(),
+        )
+        repos = ""
+        owners = ""
+        for game in games:
+            repos += f"[{game['name']}]({GithubWrapper.GITHUB_URL_PREFIX + game['repo_name']})\n"
+            owners += game["owner_display_name"] + "\n"
+        embed.add_field(
+            name="Game",
+            value=repos,
+            inline=True,
+        )
+        embed.add_field(
+            name="Owner",
+            value=owners,
+            inline=True,
+        )
+
+        await ctx.respond(embed=embed, ephemeral=True)
 
 class DescriptionModal(Modal):
     def __init__(self, game_id: int, current_description: str = ""):
