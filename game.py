@@ -47,7 +47,14 @@ class Game(commands.Cog):
     async def listall(self, ctx: discord.ApplicationContext):
         print("someone did /game list")
         sys.stdout.flush()
-        await ctx.respond("test", ephemeral=True)
+        return
+        games: list[dict] = Database.fetch_all_as_dict_arr(
+            Database.GAMES_DB,
+            "games",
+        )
+        print("now we have the games, send it")
+        sys.stdout.flush()
+        await Game.send_games_list(ctx, games)
         print("we did the sending")
         sys.stdout.flush()
 
