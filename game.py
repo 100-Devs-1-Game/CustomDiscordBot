@@ -47,6 +47,7 @@ class Game(commands.Cog):
     async def listall(self, ctx: discord.ApplicationContext):
         print("someone did /game list")
         sys.stdout.flush()
+        return
         games: list[dict] = Database.fetch_all_as_dict_arr(
             Database.GAMES_DB,
             "games",
