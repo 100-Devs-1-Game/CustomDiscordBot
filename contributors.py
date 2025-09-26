@@ -18,6 +18,7 @@ CONTRIBUTION_TYPES = [
     "Writer",
     "Voice Actor",
     "Translator",
+    "QA",
 ]
 
 PING_ROLES = {
