@@ -42,16 +42,13 @@ class Game(commands.Cog):
 
         await Game.send_game_info(ctx, game_info)
 
-    @group.command(
-        description="Get a list of all games"
-    )
+    @group.command(description="Get a list of all games")
     async def list(self, ctx: discord.ApplicationContext):
         games: list[dict] = Database.fetch_all_as_dict_arr(
             Database.GAMES_DB,
             "games",
         )
         await Game.send_games_list(ctx, games)
-
 
     @group.command(description="Set or update the description for your game")
     async def setdescription(self, ctx: discord.ApplicationContext):
@@ -571,27 +568,52 @@ class Game(commands.Cog):
 
     @staticmethod
     async def send_games_list(ctx, games):
-        embed = discord.Embed(
-            title="List of games",
-            color=discord.Color.blurple(),
-        )
-        repos = ""
-        owners = ""
-        for game in games:
-            repos += f"[{game['name']}]({GithubWrapper.GITHUB_URL_PREFIX + game['repo_name']})\n"
-            owners += game["owner_display_name"] + "\n"
-        embed.add_field(
-            name="Game",
-            value=repos,
-            inline=True,
-        )
-        embed.add_field(
-            name="Owner",
-            value=owners,
-            inline=True,
-        )
+        embeds = []
+        buffer = ""
+        field_name = "Games"
 
-        await ctx.respond(embed=embed, ephemeral=True)
+        for game in games:
+            github_link = GithubWrapper.GITHUB_URL_PREFIX + game.get("repo_name")
+            itchio_link = game.get("itch_io_link")
+            channel_id = game.get("channel_id")
+            gameid = f"{(game.get('id')):02}"
+
+            line = f"`{gameid}` "
+            line += f"[GitHub]({github_link}) | "
+
+            if isinstance(itchio_link, str) and itchio_link != "":
+                line += f"[ItchIO]({itchio_link}) | "
+            else:
+                line += "ItchIO | "
+
+            line += f"<#{channel_id}>"
+            line += "\n"
+
+            if len(buffer) + len(line) > 1024:
+                embed = discord.Embed(
+                    title="List of games",
+                    color=discord.Color.blurple(),
+                )
+                embed.add_field(name=field_name, value=buffer.rstrip(), inline=False)
+                embeds.append(embed)
+                buffer = ""
+
+            buffer += line
+
+        if buffer:
+            embed = discord.Embed(
+                title="List of games",
+                color=discord.Color.blurple(),
+            )
+            embed.add_field(name=field_name, value=buffer.rstrip(), inline=False)
+            embeds.append(embed)
+
+        # Send embeds: first as response, rest as followups
+        if embeds:
+            await ctx.respond(embed=embeds[0], ephemeral=True)
+            for embed in embeds[1:]:
+                await ctx.followup.send(embed=embed, ephemeral=True)
+
 
 class DescriptionModal(Modal):
     def __init__(self, game_id: int, current_description: str = ""):
