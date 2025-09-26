@@ -42,16 +42,16 @@ class Game(commands.Cog):
 
         await Game.send_game_info(ctx, game_info)
 
-    @group.command(description="Get a list of all games")
+    @group.command(
+        description="Get a list of all games"
+    )
     async def list(self, ctx: discord.ApplicationContext):
-        print("someone did /game list")
         games: list[dict] = Database.fetch_all_as_dict_arr(
             Database.GAMES_DB,
             "games",
         )
-        print("now we have the games, send it")
         await Game.send_games_list(ctx, games)
-        print("we did the sending")
+
 
     @group.command(description="Set or update the description for your game")
     async def setdescription(self, ctx: discord.ApplicationContext):
@@ -571,7 +571,6 @@ class Game(commands.Cog):
 
     @staticmethod
     async def send_games_list(ctx, games):
-        print("sending games list")
         embed = discord.Embed(
             title="List of games",
             color=discord.Color.blurple(),
@@ -592,10 +591,7 @@ class Game(commands.Cog):
             inline=True,
         )
 
-        print("sending games list - responding")
         await ctx.respond(embed=embed, ephemeral=True)
-        print("sending games list - responded")
-
 
 class DescriptionModal(Modal):
     def __init__(self, game_id: int, current_description: str = ""):
