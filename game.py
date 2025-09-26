@@ -44,7 +44,7 @@ class Game(commands.Cog):
         await Game.send_game_info(ctx, game_info)
 
     @group.command(description="Get a list of all games")
-    async def list(self, ctx: discord.ApplicationContext):
+    async def listall(self, ctx: discord.ApplicationContext):
         print("someone did /game list")
         sys.stdout.flush()
         games: list[dict] = Database.fetch_all_as_dict_arr(
