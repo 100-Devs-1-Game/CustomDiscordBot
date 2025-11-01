@@ -5,7 +5,7 @@ from discord.ext import commands
 GREETING_MESSAGE = "Welcome to our Community!"
 COMMUNITY_DESCRIPTION = "We are trying to make video games with as many contributors as possible. We are hobbyists, our games are free and open source, no one is paid."
 FOOTER_TEXT = """
-Type /help [...] or ask in one of the ❓ channels if you don't know where to start or need assistance. 
+Type /help [...] or ask in one of the 💬 channels if you don't know where to start or need assistance. 
 We are always happy to help!
 
 Remember: Everyone is welcome to contribute, no matter your skill level or background.
@@ -16,6 +16,7 @@ LINKS_TEXT = "Follow us on [Bluesky](https://bsky.app/profile/godot-collab-jam.b
 
 
 HIGHLIGHT_CHANNEL_IDS = [
+    1393365048918802625,
     1393312261770051674,
     1394481813052850299,
     1403380646105321502,
