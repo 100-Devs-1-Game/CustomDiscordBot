@@ -490,6 +490,36 @@ class Game(commands.Cog):
         response = "\n".join(lines)
         await ctx.respond(response, ephemeral=True)
 
+    @group.command(description="Set new game owner")
+    async def setowner(self, ctx: discord.ApplicationContext, user: discord.User):
+        game_info = (
+            Database.get_default_game_info()
+            if Utils.is_test_environment()
+            else Database.get_game_info(ctx.channel.id)
+        )
+        if not game_info:
+            await ctx.respond("No game associated with this channel.", ephemeral=True)
+            return
+
+        if (
+            ctx.author.name != game_info["owner"]
+            and not ctx.author.guild_permissions.manage_guild
+        ):
+            await ctx.respond(
+                "Only the game owner or mods can set the new owner.",
+                ephemeral=True,
+            )
+            return
+
+        # Update the game owner in the database
+        Database.execute(
+            Database.GAMES_DB,
+            "UPDATE games SET owner = ? WHERE id = ?",
+            (user.name, game_info["id"]),
+        )
+
+        await ctx.respond(f"Game owner has been updated to {user.mention}.", ephemeral=True)
+
     @staticmethod
     async def send_game_info(ctx, game_info):
         description = game_info.get("description", "")
