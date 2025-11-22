@@ -511,11 +511,17 @@ class Game(commands.Cog):
             )
             return
 
-        # Update the game owner in the database
-        Database.execute(
+        # Update the game owner in the database using helper to ensure proper DB handling
+        Database.update_field(
+            Database.GAMES_DB, "games", game_info["id"], "owner", user.name
+        )
+        # Also update the display name so UIs show the correct owner display name
+        Database.update_field(
             Database.GAMES_DB,
-            "UPDATE games SET owner = ? WHERE id = ?",
-            (user.name, game_info["id"]),
+            "games",
+            game_info["id"],
+            "owner_display_name",
+            getattr(user, "display_name", user.name),
         )
 
         await ctx.respond(f"Game owner has been updated to {user.mention}.", ephemeral=True)
