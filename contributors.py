@@ -110,6 +110,50 @@ class Contributors(commands.Cog):
             ephemeral=True,
         )
 
+    @group.command(description="Remove a contributor from this game")
+    async def remove(self, ctx: discord.ApplicationContext, member: discord.Member):
+        game_info = (
+            Database.get_default_game_info()
+            if Utils.is_test_environment()
+            else Database.get_game_info(ctx.channel.id)
+        )
+        if not game_info:
+            await ctx.respond("⚠️ No game found for this channel.", ephemeral=True)
+            return
+
+        if not ctx.author.guild_permissions.manage_guild:
+            await ctx.respond(
+                "❌ Only an admin can remove contributors.", ephemeral=True
+            )
+            return
+
+        contributor = Database.fetch_one_as_dict(
+            Database.GAMES_DB,
+            "contributors",
+            "discord_username = ?",
+            (str(member.name),),
+        )
+
+        if not contributor:
+            await ctx.respond(
+                f"⚠️ {member.display_name} is not registered as a contributor.",
+                ephemeral=True,
+            )
+            return
+
+        # Remove contributor from game_contributors table
+        Database.delete_from_db(
+            Database.GAMES_DB,
+            "game_contributors",
+            "game_id = ? AND contributor_id = ?",
+            (str(game_info["id"]), str(contributor["id"])),
+        )
+
+        await ctx.respond(
+            f"✅ Removed contributor **{member.display_name}** from the game.",
+            ephemeral=True,
+        )
+
     @group.command(description="Export the list of contributors for the credits")
     async def export(self, ctx: discord.ApplicationContext):
         game_info = (
