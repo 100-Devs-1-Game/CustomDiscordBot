@@ -111,7 +111,7 @@ class Contributors(commands.Cog):
         )
 
     @group.command(description="Remove a contributor from this game")
-    async def remove(self, ctx: discord.ApplicationContext, member: discord.Member):
+    async def remove(self, ctx: discord.ApplicationContext, user_name: str):
         game_info = (
             Database.get_default_game_info()
             if Utils.is_test_environment()
@@ -131,12 +131,12 @@ class Contributors(commands.Cog):
             Database.GAMES_DB,
             "contributors",
             "discord_username = ?",
-            (str(member.name),),
+            (str(user_name),),
         )
 
         if not contributor:
             await ctx.respond(
-                f"⚠️ {member.display_name} is not registered as a contributor.",
+                f"⚠️ {user_name} is not registered as a contributor.",
                 ephemeral=True,
             )
             return
@@ -150,7 +150,7 @@ class Contributors(commands.Cog):
         )
 
         await ctx.respond(
-            f"✅ Removed contributor **{member.display_name}** from the game.",
+            f"✅ Removed contributor **{user_name}** from the game.",
             ephemeral=True,
         )
 
