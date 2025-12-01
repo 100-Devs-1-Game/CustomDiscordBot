@@ -29,6 +29,8 @@ PING_ROLES = {
     "Sound Designer": "PingSFX",
     "Writer": "PingWriter",
     "Voice Actor": "PingVoice",
+    "UI/UX Designer": "PingUI",
+    "Game Designer": "PingDesigner",
 }
 
 SUPPORTED_REQUEST_ROLES = [
@@ -39,6 +41,8 @@ SUPPORTED_REQUEST_ROLES = [
     "Sound Designer",
     "Writer",
     "Voice Actor",
+    "UI/UX Designer",
+    "Game Designer",
 ]
 
 Utils.ensure_env_var(
