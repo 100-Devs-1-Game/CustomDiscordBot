@@ -19,6 +19,8 @@ CONTRIBUTION_TYPES = [
     "Voice Actor",
     "Translator",
     "QA",
+    "UI/UX Designer",
+    "Game Designer",
 ]
 
 PING_ROLES = {
