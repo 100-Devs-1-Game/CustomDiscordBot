@@ -378,83 +378,6 @@ class Game(commands.Cog):
         )
 
     @group.command(
-        description="Update your estimated timeframe in which your game will be ready to be released"
-    )
-    async def updatereleasedate(
-        self, ctx: discord.ApplicationContext, minimum_days: int, maximum_days: int
-    ):
-        game_info = (
-            Database.get_default_game_info()
-            if Utils.is_test_environment()
-            else Database.get_game_info(ctx.channel.id)
-        )
-        if not game_info:
-            await ctx.respond("No game associated with this channel.", ephemeral=True)
-            return
-
-        if (
-            ctx.author.name != game_info["owner"]
-            and not ctx.author.guild_permissions.manage_guild
-        ):
-            await ctx.respond(
-                "Only the game owner can set the release date.",
-                ephemeral=True,
-            )
-            return
-
-        await ctx.defer(ephemeral=True)
-
-        schedule_channel = ctx.guild.get_channel(SCHEDULE_CHANNEL_ID)
-        if schedule_channel is None:
-            schedule_channel = await ctx.guild.fetch_channel(SCHEDULE_CHANNEL_ID)
-
-        header_str = "**Estimated remaining development time:**"
-
-        if await Utils.channel_is_empty(schedule_channel):
-            await schedule_channel.send(header_str)
-
-        # Get the very first message from the schedule channel
-        async for msg in schedule_channel.history(limit=1, oldest_first=True):
-            message = msg
-            break
-
-        content = message.content.splitlines()
-
-        # Ensure header exists
-        if not content or not content[0].startswith(header_str):
-            content = [header_str]
-
-        if minimum_days > 0:
-            timestamp1 = Utils.build_timestamp(minimum_days)
-            timestamp2 = Utils.build_timestamp(maximum_days)
-
-            duration_text = f"{timestamp1}"
-            if timestamp1 != timestamp2:
-                duration_text += f" - {timestamp2}"
-
-            entry = f"{ctx.channel.mention} :  {duration_text}"
-        else:
-            # remove entry if minimum_days is 0 or less
-            entry = ""
-
-        # Check if this game channel already exists in the message
-        updated = False
-        for i, line in enumerate(content[1:], start=1):
-            if line.startswith(str(ctx.channel.mention)):
-                content[i] = entry
-                updated = True
-                break
-
-        if not updated:
-            content.append(entry)
-        content = [line for line in content if line.strip()]  # remove empty lines
-
-        # Push the edit
-        await message.edit(content="\n".join(content))
-
-        await ctx.respond("Schedule updated!", ephemeral=True)
-
-    @group.command(
         description="List all contributors to this game along with their itch.io links (if provided)"
     )
     async def listcontributorsitchio(self, ctx: discord.ApplicationContext):
@@ -524,7 +447,9 @@ class Game(commands.Cog):
             getattr(user, "display_name", user.name),
         )
 
-        await ctx.respond(f"Game owner has been updated to {user.mention}.", ephemeral=True)
+        await ctx.respond(
+            f"Game owner has been updated to {user.mention}.", ephemeral=True
+        )
 
     @staticmethod
     async def send_game_info(ctx, game_info):
