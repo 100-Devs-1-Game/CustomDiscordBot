@@ -93,6 +93,28 @@ class Game(commands.Cog):
         )
         await ctx.respond("Itch.io link updated.", ephemeral=True)
 
+    @group.command(description="Set the repository name for your game")
+    async def setreponame(self, ctx: discord.ApplicationContext, repo_name: str):
+        game_info = (
+            Database.get_default_game_info()
+            if Utils.is_test_environment()
+            else Database.get_game_info(ctx.channel.id)
+        )
+        if not game_info:
+            await ctx.respond("No game associated with this channel.", ephemeral=True)
+            return
+
+        if not ctx.author.guild_permissions.manage_guild:
+            await ctx.respond(
+                "Only moderators can update the repository name.", ephemeral=True
+            )
+            return
+
+        Database.update_field(
+            Database.GAMES_DB, "games", game_info["id"], "repo_name", repo_name
+        )
+        await ctx.respond("Repository name updated.", ephemeral=True)
+
     @group.command(
         description="Builds executables and deploys the HTML export to itch.io"
     )
