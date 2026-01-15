@@ -23,30 +23,35 @@ class GameChannel(commands.Cog):
     )
     @option("game_name", description="Name of game")
     async def create_game(self, ctx: discord.ApplicationContext, game_name: str):
-        if not isinstance(ctx.channel, discord.Thread):
-            await ctx.respond(
-                "You need to run this inside a forum thread.", ephemeral=True
-            )
-            return
-        if (
-            FORUM_ID > -1
-            and ctx.channel.parent_id != FORUM_ID
-            and not Utils.is_test_environment()
-        ):
-            await ctx.respond(
-                "This thread is not part of the correct forum.", ephemeral=True
-            )
-            return
+        is_thread = isinstance(ctx.channel, discord.Thread)
 
-        if ctx.channel.locked:
-            await ctx.respond("This thread is already locked.", ephemeral=True)
-            return
+        if is_thread:
+            if (
+                FORUM_ID > -1
+                and ctx.channel.parent_id != FORUM_ID
+                and not Utils.is_test_environment()
+            ):
+                await ctx.respond(
+                    "This thread is not part of the correct forum.", ephemeral=True
+                )
+                return
 
-        if not ctx.author.guild_permissions.manage_guild:
-            await ctx.channel.send(
-                f"{ctx.guild.owner.mention} : {ctx.author.mention} requested a game channel for {game_name}. Please approve."
-            )
-            return
+            if ctx.channel.locked:
+                await ctx.respond("This thread is already locked.", ephemeral=True)
+                return
+
+            if not ctx.author.guild_permissions.manage_guild:
+                await ctx.channel.send(
+                    f"{ctx.guild.owner.mention} : {ctx.author.mention} requested a game channel for {game_name}. Please approve."
+                )
+                return
+        else:
+            if not ctx.author.guild_permissions.manage_guild:
+                await ctx.respond(
+                    "You don't have permission to run this command here.",
+                    ephemeral=True,
+                )
+                return
 
         repo_name_sanitized = sanitize_repo_name(game_name)
 
@@ -56,6 +61,7 @@ class GameChannel(commands.Cog):
             if repo.name.lower() == repo_name_sanitized.lower():
                 existing = repo
                 break
+        repo = None
 
         if existing:
             print(f"Repo {repo_name_sanitized} already exists: {existing.html_url}")
@@ -64,7 +70,7 @@ class GameChannel(commands.Cog):
                 ephemeral=True,
             )
             return
-        else:
+        elif is_thread:
             url = ""
             if not Utils.is_test_environment():
                 repo = GithubWrapper.get_github_org().create_repo_from_template(
@@ -72,26 +78,34 @@ class GameChannel(commands.Cog):
                         "100-Devs-1-Game/MinimalProjectTemplate"
                     ),
                     name=repo_name_sanitized,
-                    description=f"Repository for the game {game_name} - for 100 Games in 100 Days",
+                    description=f"Repository for the game {game_name}",
                     private=False,
                     include_all_branches=False,
                 )
                 url = repo.html_url
 
-        thread = ctx.channel
-        guild = ctx.guild
-        owner = thread.owner
+        if is_thread:
+            thread = ctx.channel
+            guild = ctx.guild
+            owner = thread.owner
 
-        category = guild.get_channel(CHANNEL_CATEGORY)
+            category = guild.get_channel(CHANNEL_CATEGORY)
 
-        # create new text channel
-        new_channel = await guild.create_text_channel(
-            name=game_name,
-            topic=f"Copy of {thread.jump_url}\nRepository: {url}\nOwner: {owner.mention}",
-            category=category,
-        )
+            # create new text channel
+            new_channel = await guild.create_text_channel(
+                name=game_name,
+                topic=f"Copy of {thread.jump_url}\nRepository: {url}\nOwner: {owner.mention}",
+                category=category,
+            )
+        else:
+            new_channel = ctx.channel
+            owner = ctx.author
 
-        Database.add_game(game_name, repo.name, new_channel.id, owner)
+        Database.add_game(game_name, repo.name if repo else "", new_channel.id, owner)
+
+        if not is_thread:
+            await ctx.followup.send("Game created in DB", ephemeral=True)
+            return
 
         # add link to new channel in old thread
         await thread.send(f"Thread closed. Continued in {new_channel.mention}")
