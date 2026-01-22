@@ -86,7 +86,11 @@ class Database:
         discord_display_name=None,
         itch_io_link=None,
         alt_link=None,
+        time_zone=None,
     ):
+        time_zone_int = int(time_zone)
+        time_zone_int = max(-12, min(12, time_zone_int))
+
         Database.insert_into_db(
             Database.GAMES_DB,
             "contributors",
@@ -95,6 +99,7 @@ class Database:
             discord_display_name=discord_display_name,
             itch_io_link=itch_io_link,
             alt_link=alt_link,
+            time_zone=time_zone_int,
         )
 
     @staticmethod
@@ -330,6 +335,41 @@ def setup_db(db_name, table_schemas):
     conn.close()
 
 
+# Add new fields to existing tables
+NEW_FIELDS = {
+    "contributors": [
+        ("time_zone", "INTEGER DEFAULT NULL"),
+    ],
+}
+
+
+def apply_schema_updates(db_path=Database.GAMES_DB):
+    conn = sqlite3.connect(db_path)
+    c = conn.cursor()
+
+    for table, new_columns in NEW_FIELDS.items():
+        # skip tables that don't exist
+        c.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name=?", (table,)
+        )
+        if not c.fetchone():
+            print(f"Table '{table}' not found, skipping.")
+            continue
+
+        # get existing columns
+        c.execute(f"PRAGMA table_info({table})")
+        existing = [row[1] for row in c.fetchall()]
+
+        # add any missing columns
+        for name, coltype in new_columns:
+            if name not in existing:
+                print(f"Adding column '{name}' to table '{table}'")
+                c.execute(f"ALTER TABLE {table} ADD COLUMN {name} {coltype}")
+
+    conn.commit()
+    conn.close()
+
+
 os.makedirs("dbs", exist_ok=True)
 setup_db(
     Database.GAMES_DB,
@@ -385,3 +425,5 @@ setup_db(
         }
     ],
 )
+
+apply_schema_updates()

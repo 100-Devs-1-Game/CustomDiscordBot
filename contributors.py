@@ -325,6 +325,36 @@ class Contributors(commands.Cog):
 
         await ctx.respond("✅ Updated your itch.io link.", ephemeral=True)
 
+    @group.command(description="Update the time zone in your contributor profile")
+    async def updatetimezone(self, ctx: discord.ApplicationContext, time_zone: int):
+        contributor = Database.fetch_one_as_dict(
+            Database.GAMES_DB,
+            "contributors",
+            "discord_username = ?",
+            (str(ctx.author.name),),
+        )
+
+        if not contributor:
+            await ctx.respond(
+                "⚠️ You are not registered as a contributor. Use `/contributors register` first.",
+                ephemeral=True,
+            )
+            return
+
+        Database.update_field(
+           Database.GAMES_DB,
+           "contributors",
+           contributor["id"],
+           "time_zone",
+           time_zone,
+        )
+
+        if time_zone >= 0:
+            time_zone_str = f"+{time_zone}"
+        else:
+            time_zone_str = str(time_zone)
+        await ctx.respond(f"✅ Updated your time zone to UTC {time_zone_str}.", ephemeral=True)
+
     @group.command(
         description="Make user the admin of an itch.io page via an invite link"
     )
@@ -372,10 +402,17 @@ class ContributorRegisterModal(Modal):
             placeholder="Optional: Portfolio, GitHub, etc.",
             required=False,
         )
+        self.time_zone = InputText(
+            label="Time Zone ( UTC Offset )",
+            placeholder="-12 to +12",
+            max_length=3,
+            required=True
+        )
 
         self.add_item(self.credit_name)
         self.add_item(self.itch_io_link)
         self.add_item(self.alt_link)
+        self.add_item(self.time_zone)
 
     async def callback(self, interaction: discord.Interaction):
         if Database.entry_exists(
@@ -393,6 +430,7 @@ class ContributorRegisterModal(Modal):
             credit_name=self.credit_name.value,
             itch_io_link=self.itch_io_link.value or None,
             alt_link=self.alt_link.value or None,
+            time_zone=self.time_zone.value,
         )
 
         await interaction.response.send_message(
