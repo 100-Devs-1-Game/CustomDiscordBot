@@ -416,11 +416,11 @@ class Game(commands.Cog):
         contributors = Database.execute(
             Database.GAMES_DB,
             """
-			SELECT c.discord_display_name, c.itch_io_link
-			FROM game_contributors gc
-			JOIN contributors c ON c.id = gc.contributor_id
-			WHERE gc.game_id = ?
-		""",
+            SELECT c.discord_display_name, c.itch_io_link
+            FROM game_contributors gc
+            JOIN contributors c ON c.id = gc.contributor_id
+            WHERE gc.game_id = ?
+        """,
             (game_info["id"],),
         )
         if not contributors:
@@ -473,6 +473,46 @@ class Game(commands.Cog):
             f"Game owner has been updated to {user.mention}.", ephemeral=True
         )
 
+    @group.command(description="Set the link to the Game Design Document")
+    async def setgddlink(self, ctx: discord.ApplicationContext, link: str):
+        game_info = (
+            Database.get_default_game_info()
+            if Utils.is_test_environment()
+            else Database.get_game_info(ctx.channel.id)
+        )
+        if not game_info:
+            await ctx.respond("No game associated with this channel.", ephemeral=True)
+            return
+
+        if (
+            ctx.author.name != game_info["owner"]
+            and not ctx.author.guild_permissions.manage_guild
+        ):
+            await ctx.respond(
+                "Only the game owner or mods can set the GDD link.",
+                ephemeral=True,
+            )
+            return
+
+        # validate link format (basic check)
+        if not (link.startswith("http://") or link.startswith("https://")):
+            await ctx.respond(
+                "Please provide a valid URL starting with http:// or https://",
+                ephemeral=True,
+            )
+            return
+
+        # turn /edit.. following links into /view.. links for Google Docs
+        if "/edit" in link:
+            link = link.split("/edit")[0] + "/view"
+
+        # Update the GDD link in the database using helper to ensure proper DB handling
+        Database.update_field(
+            Database.GAMES_DB, "games", game_info["id"], "gdd_link", link
+        )
+
+        await ctx.respond(f"GDD link has been updated to {link}.", ephemeral=True)
+
     @staticmethod
     async def send_game_info(ctx, game_info):
         description = game_info.get("description", "")
@@ -492,6 +532,13 @@ class Game(commands.Cog):
             inline=False,
         )
         embed.add_field(name="Owner", value=game_info["owner_display_name"])
+
+        if game_info.get("gdd_link"):
+            embed.add_field(
+                name="Game Design Document",
+                value=f"[Google Drive Doc]({game_info['gdd_link']})",
+                inline=False,
+            )
 
         if game_info.get("itch_io_link"):
             embed.add_field(
@@ -522,11 +569,11 @@ class Game(commands.Cog):
         return Database.execute(
             Database.GAMES_DB,
             f"""
-			SELECT c.{name}, gc.role
-			FROM game_contributors gc
-			JOIN contributors c ON c.id = gc.contributor_id
-			WHERE gc.game_id = ?
-		""",
+            SELECT c.{name}, gc.role
+            FROM game_contributors gc
+            JOIN contributors c ON c.id = gc.contributor_id
+            WHERE gc.game_id = ?
+        """,
             (game_info["id"],),
         )
 

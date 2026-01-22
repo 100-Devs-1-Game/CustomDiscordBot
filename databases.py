@@ -340,6 +340,9 @@ NEW_FIELDS = {
     "contributors": [
         ("time_zone", "INTEGER DEFAULT NULL"),
     ],
+    "games": [
+        ("gdd_link", "TEXT DEFAULT NULL"),
+    ],
 }
 
 
