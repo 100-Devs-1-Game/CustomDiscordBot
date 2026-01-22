@@ -94,7 +94,7 @@ class GameChannel(commands.Cog):
             # create new text channel
             new_channel = await guild.create_text_channel(
                 name=game_name,
-                topic=f"Copy of {thread.jump_url}\nRepository: {url}\nOwner: {owner.mention}",
+                topic=f"Type '/game info' for more information\nCopy of {thread.jump_url}\nRepository: {url}\nOwner: {owner.mention}",
                 category=category,
             )
         else:
