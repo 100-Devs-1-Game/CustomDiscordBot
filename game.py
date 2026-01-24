@@ -1,5 +1,6 @@
 import os
 from datetime import datetime, timezone
+from enum import IntEnum
 
 import discord
 from discord import Interaction
@@ -10,6 +11,14 @@ from dotenv import load_dotenv
 from databases import Database
 from github_wrapper import GithubWrapper
 from utils import Utils
+
+
+class GameState(IntEnum):
+    IN_PROGRESS = 0
+    RELEASED = 1
+    KEEP_DEVELOPING = 2
+    CANCELLED = 3
+
 
 Utils.ensure_env_var("QA_CHANNEL_ID", "1416625126136483890")  # Test server
 Utils.ensure_env_var("SCHEDULE_CHANNEL_ID", "1416666323831885905")  # Test server
@@ -513,6 +522,46 @@ class Game(commands.Cog):
 
         await ctx.respond(f"GDD link has been updated to {link}.", ephemeral=True)
 
+    @group.command(description="Update game release state to 'Released'")
+    async def released(
+        self, ctx: discord.ApplicationContext, keep_developing: bool = False
+    ):
+        await Game.set_release_state(
+            ctx, GameState.KEEP_DEVELOPING if keep_developing else GameState.RELEASED
+        )
+
+    @group.command(description="Update game release state to 'Cancelled'")
+    async def cancelled(self, ctx: discord.ApplicationContext):
+        await Game.set_release_state(ctx, GameState.CANCELLED)
+
+    @staticmethod
+    async def set_release_state(ctx: discord.ApplicationContext, state: GameState):
+        game_info = (
+            Database.get_default_game_info()
+            if Utils.is_test_environment()
+            else Database.get_game_info(ctx.channel.id)
+        )
+
+        if not game_info:
+            await ctx.respond("No game associated with this channel.", ephemeral=True)
+            return
+
+        if not ctx.author.guild_permissions.manage_guild:
+            await ctx.respond(
+                "Only the mods can set game development states.",
+                ephemeral=True,
+            )
+            return
+
+        # Update the game state in the database using helper to ensure proper DB handling
+        Database.update_field(
+            Database.GAMES_DB, "games", game_info["id"], "state", state.value
+        )
+
+        await ctx.respond(
+            f"Game state has been updated to {state.name}.", ephemeral=True
+        )
+
     @staticmethod
     async def send_game_info(ctx, game_info):
         description = game_info.get("description", "")
@@ -525,6 +574,11 @@ class Game(commands.Cog):
             title=game_info["name"],
             description=description,
             color=discord.Color.blurple(),
+        )
+        embed.add_field(
+            name="State",
+            value=GameState(game_info["state"]).name.replace("_", " ").title(),
+            inline=False,
         )
         embed.add_field(
             name="Repository",
