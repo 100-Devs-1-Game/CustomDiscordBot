@@ -339,9 +339,12 @@ def setup_db(db_name, table_schemas):
 NEW_FIELDS = {
     "contributors": [
         ("time_zone", "INTEGER DEFAULT NULL"),
+        ("trust_points", "INTEGER DEFAULT 0"),
+        ("trust_remarks", "TEXT DEFAULT NULL"),
     ],
     "games": [
         ("gdd_link", "TEXT DEFAULT NULL"),
+        ("state", "INTEGER DEFAULT 0"),
     ],
 }
 

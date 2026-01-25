@@ -1,13 +1,23 @@
 import os
 from collections import defaultdict
+from enum import IntEnum
 
 import discord
 from discord.ext import commands
 from discord.ui import InputText, Modal
 
 from databases import Database
-from game import Game
+from game import Game, GameState
 from utils import Utils
+
+
+class TrustLevel(IntEnum):
+    UNKNOWN = 0
+    LOW = 1
+    MEDIUM = 2
+    HIGH = 3
+    VERY_HIGH = 4
+
 
 CONTRIBUTION_TYPES = [
     "Programmer",
@@ -46,6 +56,8 @@ SUPPORTED_REQUEST_ROLES = [
     "UI/UX Designer",
     "Game Designer",
 ]
+
+TRUST_REWARD_ROLES = ["Original100"]
 
 Utils.ensure_env_var(
     "CONTRIBUTORS_REQUEST_CHANNEL_ID", 1414479400250114058
@@ -342,18 +354,20 @@ class Contributors(commands.Cog):
             return
 
         Database.update_field(
-           Database.GAMES_DB,
-           "contributors",
-           contributor["id"],
-           "time_zone",
-           time_zone,
+            Database.GAMES_DB,
+            "contributors",
+            contributor["id"],
+            "time_zone",
+            time_zone,
         )
 
         if time_zone >= 0:
             time_zone_str = f"+{time_zone}"
         else:
             time_zone_str = str(time_zone)
-        await ctx.respond(f"✅ Updated your time zone to UTC {time_zone_str}.", ephemeral=True)
+        await ctx.respond(
+            f"✅ Updated your time zone to UTC {time_zone_str}.", ephemeral=True
+        )
 
     @group.command(
         description="Make user the admin of an itch.io page via an invite link"
@@ -382,6 +396,176 @@ class Contributors(commands.Cog):
 
         await ctx.respond(f"✅ Invite sent to {user.display_name}")
 
+    @group.command(description="Check the estimated trust level of a user")
+    async def trustlevel(self, ctx: discord.ApplicationContext, user: discord.User):
+        trust_level = Contributors.calculate_trust(user)
+        await ctx.respond(
+            f"✅ {user.display_name}'s estimated trust level is: {TrustLevel(trust_level).name.replace('_', ' ').title()}",
+            ephemeral=True,
+        )
+
+    @group.command(description="Set trust points for a contributor ( admin only )")
+    async def settrustpoints(
+        self,
+        ctx: discord.ApplicationContext,
+        user: discord.User,
+        points: int,
+        remarks: str = "",
+    ):
+        if not ctx.author.guild_permissions.manage_guild:
+            await ctx.respond("❌ You do not have permission to use this command.")
+            return
+
+        contributor = Database.fetch_one_as_dict(
+            Database.GAMES_DB,
+            "contributors",
+            "discord_username = ?",
+            (str(user.name),),
+        )
+        if not contributor:
+            await ctx.respond(
+                "⚠️ This user is not registered as a contributor.",
+                ephemeral=True,
+            )
+            return
+
+        Database.update_field(
+            Database.GAMES_DB,
+            "contributors",
+            contributor["id"],
+            "trust_points",
+            points,
+        )
+
+        Database.update_field(
+            Database.GAMES_DB,
+            "contributors",
+            contributor["id"],
+            "trust_remarks",
+            remarks,
+        )
+        await ctx.respond(
+            f"✅ {user.display_name}'s Trust Points have been set to {points}.",
+            ephemeral=True,
+        )
+
+    @group.command(description="View trust points for a contributor ( admin only )")
+    async def viewtrustpoints(
+        self, ctx: discord.ApplicationContext, user: discord.User
+    ):
+        if not ctx.author.guild_permissions.manage_guild:
+            await ctx.respond("❌ You do not have permission to use this command.")
+            return
+
+        contributor = Database.fetch_one_as_dict(
+            Database.GAMES_DB,
+            "contributors",
+            "discord_username = ?",
+            (str(user.name),),
+        )
+        if not contributor:
+            await ctx.respond(
+                "⚠️ This user is not registered as a contributor.",
+                ephemeral=True,
+            )
+            return
+
+        trust_points = contributor.get("trust_points", 0)
+        trust_remarks = contributor.get("trust_remarks", "")
+        await ctx.respond(
+            f"✅ {user.display_name}'s Trust Points: {trust_points}\n"
+            f"Remarks: {trust_remarks}",
+            ephemeral=True,
+        )
+
+    @group.command(description="View list of all trust points ( admin only )")
+    async def viewalltrustpoints(self, ctx: discord.ApplicationContext):
+        if not ctx.author.guild_permissions.manage_guild:
+            await ctx.respond("❌ You do not have permission to use this command.")
+            return
+
+        await ctx.defer(ephemeral=True)
+
+        # fetch all contributors with trust points != 0
+        contributors = Database.fetch_all_as_dict_arr(
+            Database.GAMES_DB,
+            "contributors",
+            "trust_points != 0",
+            (),
+        )
+        if not contributors:
+            # use follow up to send message after defer
+            await ctx.followup.send(
+                "⚠️ No contributors found.",
+                ephemeral=True,
+            )
+            return
+
+        response = "✅ List of all Trust Points:\n"
+        for contributor in contributors:
+            # user = await ctx.bot.fetch_user(contributor["discord_username"])
+            trust_points = contributor.get("trust_points", 0)
+            trust_remarks = contributor.get("trust_remarks", "")
+            member = ctx.guild.get_member_named(contributor["discord_username"])
+            if member:
+                display_name = (
+                    member.display_name
+                )  # Server nickname or global display name
+            else:
+                display_name = f"{contributor['discord_username']} (left)"
+            response += (
+                f"**{display_name}**:  {trust_points} points , *{trust_remarks}*\n"
+            )
+
+        # use follow up to send message after defer
+        await ctx.followup.send(response, ephemeral=True)
+
+    @staticmethod
+    def calculate_trust(user: discord.User) -> int:
+        print(f"Calculating trust for user: {user.name}")
+        trust_score = 0
+
+        # +1 for each TRUST_REWARD_ROLES role
+        for role in TRUST_REWARD_ROLES:
+            if role in user.roles:
+                trust_score += 1
+
+        print(f"Trust score after roles: {trust_score}")
+
+        # fetch all released games this user has contributed to
+        contributor = Database.fetch_one_as_dict(
+            Database.GAMES_DB, "contributors", "discord_username = ?", (str(user.name),)
+        )
+        if not contributor:
+            return 0
+
+        contributed_games = Database.fetch_all_as_dict_arr(
+            Database.GAMES_DB,
+            "game_contributors gc JOIN games g ON gc.game_id = g.id",
+            "gc.contributor_id = ? AND g.state = ?",
+            (str(contributor["id"]), GameState.RELEASED.value),
+        )
+        trust_score += len(contributed_games)
+
+        print(f"Trust score after contributed games: {trust_score}")
+
+        unknown = trust_score == 0
+        trust_score = min(trust_score, TrustLevel.VERY_HIGH.value)
+
+        # add contributor trust points from the database
+        trust_points = contributor.get("trust_points", 0)
+        trust_score += trust_points
+
+        print(f"Trust score after trust points: {trust_score}")
+
+        if not unknown:
+            trust_score += 2  # start from medium if we have any trust points
+
+        trust_score = min(trust_score, TrustLevel.VERY_HIGH.value)
+        print(f"Final trust score: {trust_score}")
+
+        return trust_score
+
 
 class ContributorRegisterModal(Modal):
     def __init__(self, discord_username: str, discord_display_name: str | None):
@@ -406,7 +590,7 @@ class ContributorRegisterModal(Modal):
             label="Time Zone ( UTC Offset )",
             placeholder="-12 to +12",
             max_length=3,
-            required=True
+            required=True,
         )
 
         self.add_item(self.credit_name)
