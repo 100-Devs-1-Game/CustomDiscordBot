@@ -400,7 +400,7 @@ class Contributors(commands.Cog):
     async def trustlevel(self, ctx: discord.ApplicationContext, user: discord.User):
         trust_level = Contributors.calculate_trust(user)
         await ctx.respond(
-            f"✅ {user.display_name}'s estimated trust level is: {TrustLevel(trust_level).name.replace('_', ' ').title()}",
+            f"✅ {user.display_name}'s estimated trust level is: **{TrustLevel(trust_level).name.replace('_', ' ').title()}**",
             ephemeral=True,
         )
 
