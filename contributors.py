@@ -568,6 +568,9 @@ class Contributors(commands.Cog):
         if not unknown:
             trust_score += 2  # start from medium if we have any trust points
 
+        if not unknown or trust_score < 0:
+            trust_score = max(trust_score, TrustLevel.LOW.value)
+
         trust_score = min(trust_score, TrustLevel.VERY_HIGH.value)
         print(f"Final trust score: {trust_score}")
 
