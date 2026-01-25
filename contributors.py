@@ -523,6 +523,12 @@ class Contributors(commands.Cog):
     @staticmethod
     def calculate_trust(user: discord.User) -> int:
         print(f"Calculating trust for user: {user.name}")
+
+        # admins have maximum trust
+        if user.guild_permissions.administrator:
+            print("User is admin, setting trust to VERY_HIGH")
+            return TrustLevel.VERY_HIGH.value
+
         trust_score = 0
 
         user_role_names = [role.name for role in user.roles]
