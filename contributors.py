@@ -525,9 +525,11 @@ class Contributors(commands.Cog):
         print(f"Calculating trust for user: {user.name}")
         trust_score = 0
 
+        user_role_names = [role.name for role in user.roles]
+
         # +1 for each TRUST_REWARD_ROLES role
-        for role in TRUST_REWARD_ROLES:
-            if role in user.roles:
+        for role_name in TRUST_REWARD_ROLES:
+            if role_name in user_role_names:
                 trust_score += 1
 
         print(f"Trust score after roles: {trust_score}")
