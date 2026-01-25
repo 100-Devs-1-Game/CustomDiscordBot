@@ -541,11 +541,16 @@ class Contributors(commands.Cog):
         if not contributor:
             return 0
 
+        # +1 for each released or KEEP_DEVELOPING game contributed to
         contributed_games = Database.fetch_all_as_dict_arr(
             Database.GAMES_DB,
             "game_contributors gc JOIN games g ON gc.game_id = g.id",
-            "gc.contributor_id = ? AND g.state = ?",
-            (str(contributor["id"]), GameState.RELEASED.value),
+            "gc.contributor_id = ? AND g.state IN (?, ?)",
+            (
+                str(contributor["id"]),
+                GameState.RELEASED.value,
+                GameState.KEEP_DEVELOPING.value,
+            ),
         )
         trust_score += len(contributed_games)
 
