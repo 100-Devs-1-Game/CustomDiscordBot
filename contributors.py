@@ -557,7 +557,7 @@ class Contributors(commands.Cog):
         print(f"Trust score after contributed games: {trust_score}")
 
         unknown = trust_score == 0
-        trust_score = min(trust_score, TrustLevel.VERY_HIGH.value)
+        trust_score = min(trust_score, 2)
 
         # add contributor trust points from the database
         trust_points = contributor.get("trust_points", 0)
