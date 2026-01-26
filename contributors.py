@@ -120,6 +120,13 @@ class Contributors(commands.Cog):
                 ephemeral=True,
             )
             return
+        elif contributor["credit_name"].startswith("?"):
+            await ctx.channel.send(
+                f"⚠️ {member.mention} Your contributor profile is still missing information. Update it using the following commands:\n"
+                "- `/contributors updatecreditname`: the name you'd like to be credited under\n"
+                "- `/contributors updateitchiolink`: your itch.io account link\n"
+                "- `/contributors updatetimezone`: your time zone\n"
+            )
 
         # show role dropdown
         await ctx.respond(
@@ -423,11 +430,14 @@ class Contributors(commands.Cog):
             (str(user.name),),
         )
         if not contributor:
-            await ctx.respond(
-                "⚠️ This user is not registered as a contributor.",
-                ephemeral=True,
+            Database.register_contributor(
+                discord_username=str(user.name),
+                discord_display_name=user.display_name,
+                credit_name=f"?{user.display_name}",
+                itch_io_link="",
+                alt_link="",
+                time_zone=0,
             )
-            return
 
         Database.update_field(
             Database.GAMES_DB,
