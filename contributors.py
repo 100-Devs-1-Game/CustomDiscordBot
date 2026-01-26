@@ -652,7 +652,7 @@ class Contributors(commands.Cog):
 
         print(f"Trust score after trust points: {trust_score}")
 
-        if not unknown:
+        if not unknown or trust_points != 0:
             trust_score += 2  # start from medium if we have any trust points
 
         if not unknown or trust_score < 0:
