@@ -88,8 +88,9 @@ class Database:
         alt_link=None,
         time_zone=None,
     ):
-        time_zone_int = int(time_zone)
-        time_zone_int = max(-12, min(12, time_zone_int))
+        # if time_zone is provided, clamp it to valid range
+        if time_zone is not None:
+            time_zone = max(-12, min(14, time_zone))
 
         Database.insert_into_db(
             Database.GAMES_DB,
@@ -99,7 +100,7 @@ class Database:
             discord_display_name=discord_display_name,
             itch_io_link=itch_io_link,
             alt_link=alt_link,
-            time_zone=time_zone_int,
+            time_zone=time_zone,
         )
 
     @staticmethod

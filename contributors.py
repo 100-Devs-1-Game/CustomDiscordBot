@@ -57,6 +57,15 @@ SUPPORTED_REQUEST_ROLES = [
     "Game Designer",
 ]
 
+TIMEZONE_ROLES = [
+    ("TimeZonePacific", -12, -8),
+    ("TimeZoneAmericas", -7, -3),
+    ("TimeZoneEuroAfrica", -2, 3),
+    ("TimeZoneAsia", 4, 9),
+    ("TimeZoneOceania", 10, 14),
+]
+
+
 TRUST_REWARD_ROLES = ["Original100"]
 
 Utils.ensure_env_var(
@@ -360,6 +369,8 @@ class Contributors(commands.Cog):
             )
             return
 
+        time_zone = max(-12, min(14, time_zone))
+
         Database.update_field(
             Database.GAMES_DB,
             "contributors",
@@ -372,8 +383,61 @@ class Contributors(commands.Cog):
             time_zone_str = f"+{time_zone}"
         else:
             time_zone_str = str(time_zone)
+
+        # loop through TIMEZONE_ROLES to find the correct role
+        role_name = Contributors.utc_to_role_name(time_zone)
+        role = discord.utils.get(ctx.guild.roles, name=role_name)
+        if role:
+            member = ctx.guild.get_member(ctx.author.id)
+            # remove other timezone roles
+            for r_name, _, _ in TIMEZONE_ROLES:
+                r = discord.utils.get(ctx.guild.roles, name=r_name)
+                if r and r in member.roles:
+                    await member.remove_roles(r)
+            # add new timezone role
+            await member.add_roles(role)
+        else:
+            await ctx.respond(
+                f"⚠️ Could not find role for UTC {time_zone_str}. Please report this issue to the server admin.",
+                ephemeral=True,
+            )
+            return
+
         await ctx.respond(
             f"✅ Updated your time zone to UTC {time_zone_str}.", ephemeral=True
+        )
+
+    @group.command(description="View the time zone of a contributor")
+    async def timezone(self, ctx: discord.ApplicationContext, user: discord.User):
+        contributor = Database.fetch_one_as_dict(
+            Database.GAMES_DB,
+            "contributors",
+            "discord_username = ?",
+            (str(user.name),),
+        )
+
+        if not contributor:
+            await ctx.respond(
+                f"⚠️ {user.display_name} doesn't have a contributor profile.",
+                ephemeral=True,
+            )
+            return
+
+        time_zone = contributor.get("time_zone")
+        if time_zone is None:
+            await ctx.respond(
+                f"⚠️ {user.display_name} hasn't set a time zone in their contributor profile.",
+                ephemeral=True,
+            )
+            return
+
+        if time_zone >= 0:
+            time_zone_str = f"+{time_zone}"
+        else:
+            time_zone_str = str(time_zone)
+        await ctx.respond(
+            f"✅ {user.display_name}'s time zone is UTC {time_zone_str}.",
+            ephemeral=True,
         )
 
     @group.command(
@@ -436,7 +500,14 @@ class Contributors(commands.Cog):
                 credit_name=f"?{user.display_name}",
                 itch_io_link="",
                 alt_link="",
-                time_zone=0,
+                time_zone=None,
+            )
+
+            contributor = Database.fetch_one_as_dict(
+                Database.GAMES_DB,
+                "contributors",
+                "discord_username = ?",
+                (str(user.name),),
             )
 
         Database.update_field(
@@ -592,6 +663,18 @@ class Contributors(commands.Cog):
 
         return trust_score
 
+    @staticmethod
+    def utc_to_role_name(utc_offset: int) -> str:
+        # clamp utc_offset to valid range
+        utc_offset = max(-12, min(utc_offset, 14))
+
+        for name, start, end in TIMEZONE_ROLES:
+            if start <= utc_offset <= end:
+                return name
+
+        # should never happen if ranges are correct
+        raise RuntimeError("No timezone category matched")
+
 
 class ContributorRegisterModal(Modal):
     def __init__(self, discord_username: str, discord_display_name: str | None):
@@ -633,6 +716,8 @@ class ContributorRegisterModal(Modal):
             )
             return
 
+        time_zone = max(-12, min(14, int(self.time_zone.value)))
+
         # Insert new contributor
         Database.register_contributor(
             discord_username=self.discord_username,
@@ -640,8 +725,12 @@ class ContributorRegisterModal(Modal):
             credit_name=self.credit_name.value,
             itch_io_link=self.itch_io_link.value or None,
             alt_link=self.alt_link.value or None,
-            time_zone=self.time_zone.value,
+            time_zone=time_zone,
         )
+
+        role_name = Contributors.utc_to_role_name(time_zone)
+        role = discord.utils.get(interaction.guild.roles, name=role_name)
+        await interaction.user.add_roles(role)
 
         await interaction.response.send_message(
             f"✅ Registered as contributor: **{self.credit_name.value}**",
