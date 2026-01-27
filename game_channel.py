@@ -110,7 +110,7 @@ class GameChannel(commands.Cog):
         # add link to new channel in old thread
         await thread.send(f"Thread closed. Continued in {new_channel.mention}")
 
-        await self.copy_messages(thread, new_channel)
+        # await self.copy_messages(thread, new_channel)
         await Utils.send_guide_link(new_channel, owner)
         await new_channel.send(
             f"Here's the automatically created Github Repository: {url}"
