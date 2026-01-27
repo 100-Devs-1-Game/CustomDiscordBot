@@ -13,7 +13,7 @@ class Utils:
     async def send_guide_link(channel, user):
         await channel.send(
             f"{user.mention} Here is the link to our 📕 Guide: "
-            "<https://docs.google.com/document/d/1BL1erhDZDM8XW_X2w3OuT16gAEbvKB8ZxjXn0cByAJ4/edit?usp=drive_link>"
+            "<https://docs.google.com/document/d/1afly4uEVwab1enRftA5V2cC-wNOFH0TJ2S4NBkw1ic0/view>"
         )
 
     # Remove all messages from channels that contain links to the games channel
