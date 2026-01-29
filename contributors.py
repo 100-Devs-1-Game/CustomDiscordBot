@@ -286,14 +286,20 @@ class Contributors(commands.Cog):
             return
 
         embed = discord.Embed(
-            title=f"Name: {contributor['credit_name']}",
+            title=f"Credit name: {contributor['credit_name']}",
             color=discord.Color.blurple(),
         )
         embed.add_field(
-            name="itch.io Link", value=contributor["itch_io_link"] or "", inline=False
+            name="Itch.io Link", value=contributor["itch_io_link"] or "", inline=False
         )
         embed.add_field(
             name="Alternative Link", value=contributor["alt_link"] or "", inline=False
+        )
+        embed.add_field(
+            # show time zone as UTC offset, e.g. UTC +2, add the "+" explicitly for positive offsets
+            name="Time Zone",
+            value=f"UTC {'+' if contributor['time_zone'] >= 0 else ''}{contributor['time_zone']}",
+            inline=False,
         )
 
         await ctx.respond(embed=embed, ephemeral=True)
