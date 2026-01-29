@@ -46,6 +46,25 @@ class GameChannel(commands.Cog):
                 return
 
             if not ctx.author.guild_permissions.manage_guild:
+                contributor = Database.fetch_one_as_dict(
+                        Database.GAMES_DB,
+                        "contributors",
+                        "discord_username = ?",
+                        (str(ctx.author.name),),
+                    )
+
+                if not contributor:
+                    await ctx.channel.send(
+                        f"⚠️ {ctx.author.mention} please register as a contributor on our server ( type `/contributors register` in the chat and press return ) so you can be added.\nYou can react with ✅ to this message when you are done.",
+                    )
+
+                    # not registered — tell owner how to get them registered
+                    await ctx.respond(
+                        f"{ctx.author.display_name} is not registered as a contributor.",
+                        ephemeral=True,
+                    )
+                    return
+
                 await ctx.channel.send(
                     f"{ctx.guild.owner.mention} : {ctx.author.mention} requested a game channel for {game_name}. Please approve."
                 )
