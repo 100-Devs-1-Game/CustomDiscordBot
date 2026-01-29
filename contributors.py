@@ -31,6 +31,7 @@ CONTRIBUTION_TYPES = [
     "QA",
     "UI/UX Designer",
     "Game Designer",
+    "Project Lead"
 ]
 
 PING_ROLES = {

@@ -69,6 +69,32 @@ class Database:
         return Database.fetch_one_as_dict(Database.GAMES_DB, "games", "id = ?", (1,))
 
     @staticmethod
+    def get_game_leads(game_id):
+        list = []
+        game = Database.fetch_one_as_dict(
+            Database.GAMES_DB, "games", "id = ?", (game_id,)
+        )
+
+        list.append(game["owner"])
+
+        contributors = Database.fetch_all_as_dict_arr(
+            Database.GAMES_DB,
+            "game_contributors",
+            "game_id = ? AND role = 'Project Lead'",
+            (game_id,),
+        )
+        for contributor in contributors:
+            contributor_info = Database.fetch_one_as_dict(
+                Database.GAMES_DB,
+                "contributors",
+                "id = ?",
+                (contributor["contributor_id"],),
+            )
+            if contributor_info:
+                list.append(contributor_info["discord_username"])
+        return list
+    
+    @staticmethod
     def add_task(user_id, description, deadline=None, event_id=None):
         Database.insert_into_db(
             Database.TASKS_DB,
