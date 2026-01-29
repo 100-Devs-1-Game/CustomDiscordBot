@@ -18,6 +18,11 @@ class GameChannel(commands.Cog):
     def __init__(self, bot: discord.Bot):
         self.bot = bot
 
+    @commands.Cog.listener()
+    async def on_thread_create(self, thread: discord.Thread):
+        if thread.parent_id == FORUM_ID:
+            await Utils.send_guide_link(thread, thread.owner)
+
     @discord.slash_command(
         description="Close Game Idea Thread, Create new Channel for Game, Create Repository on Github"
     )
@@ -113,7 +118,10 @@ class GameChannel(commands.Cog):
         # await self.copy_messages(thread, new_channel)
         await Utils.send_guide_link(new_channel, owner)
         await new_channel.send(
-            f"Here's the automatically created Github Repository: {url}"
+            f"Here's the automatically created Github Repository: {url}\n"
+            f"Please add a project co-lead using the `/contributors add` command.\n"
+            f"Please create a new folder for your game on our Google Drive at <https://drive.google.com/drive/u/0/folders/1zwzQS6-qgAyChiD6VAIwIdm5QeNbeLKp>\n"
+            f"Please create a (preliminary) Game Design Document in that folder asap and link to it using the `/game setgdd` command."
         )
 
         # note: copied from the pycord thread.edit() func
