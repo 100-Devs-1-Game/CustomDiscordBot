@@ -51,12 +51,14 @@ class Game(commands.Cog):
 
         await Game.send_game_info(ctx, game_info)
 
-    @group.command(description="Get a list of all games")
+    @group.command(description="Get a list of all games under development")
     async def list(self, ctx: discord.ApplicationContext):
         games: list[dict] = Database.fetch_all_as_dict_arr(
             Database.GAMES_DB,
             "games",
         )
+
+        games = [game for game in games if game["state"] == GameState.IN_PROGRESS]
         await Game.send_games_list(ctx, games)
 
     @group.command(description="Set or update the description for your game")
