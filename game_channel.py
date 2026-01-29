@@ -9,7 +9,7 @@ from github_wrapper import GithubWrapper
 from utils import Utils
 
 FORUM_ID = 1411735698951639193
-CHANNEL_CATEGORY = 1411870610279366686
+CHANNEL_CATEGORY = 1427878178155659437
 # FORUM_ID = -1
 # CHANNEL_CATEGORY =
 
@@ -47,11 +47,11 @@ class GameChannel(commands.Cog):
 
             if not ctx.author.guild_permissions.manage_guild:
                 contributor = Database.fetch_one_as_dict(
-                        Database.GAMES_DB,
-                        "contributors",
-                        "discord_username = ?",
-                        (str(ctx.author.name),),
-                    )
+                    Database.GAMES_DB,
+                    "contributors",
+                    "discord_username = ?",
+                    (str(ctx.author.name),),
+                )
 
                 if not contributor:
                     await ctx.channel.send(
@@ -117,7 +117,7 @@ class GameChannel(commands.Cog):
 
             # create new text channel
             new_channel = await guild.create_text_channel(
-                name=game_name,
+                name=f"🎮⏳ {game_name}",
                 topic=f"Type '/game info' for more information\nCopy of {thread.jump_url}\nRepository: {url}\nOwner: {owner.mention}",
                 category=category,
             )
