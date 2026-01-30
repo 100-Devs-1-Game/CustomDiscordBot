@@ -7,6 +7,7 @@ import discord
 from dotenv import load_dotenv
 from github import Auth, Github
 
+from chain import Chain
 from contributors import Contributors
 from databases import Database
 from fun import Fun
@@ -145,5 +146,6 @@ if __name__ == "__main__":
     bot.add_cog(Report(bot))
     bot.add_cog(SFXRequests(bot))
     bot.add_cog(Remake(bot))
+    bot.add_cog(Chain(bot))
 
     bot.run(os.getenv("TOKEN"))  # run the bot with the token
