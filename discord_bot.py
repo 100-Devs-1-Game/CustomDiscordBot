@@ -15,6 +15,7 @@ from game_channel import GameChannel
 from help import Help
 from onboarding import Onboarding
 from potato import Potato
+from remake import Remake
 from report import Report
 from sfx_request import SFXRequests
 
@@ -143,5 +144,6 @@ if __name__ == "__main__":
     # bot.add_cog(OneHundred(bot))
     bot.add_cog(Report(bot))
     bot.add_cog(SFXRequests(bot))
+    bot.add_cog(Remake(bot))
 
     bot.run(os.getenv("TOKEN"))  # run the bot with the token
